@@ -7,7 +7,7 @@ notes from my University master courses. I try to keep it updated during lecture
 time and I use this notes to study before exams, as an *extended summary* of
 the courses content.
 
-## What is NOT this repo?
+## What is this repo NOT?
 
 All the content in this repository is **NOT** official material from courses or
 lectures, and should **NOT** replace the official material given by professors
