@@ -1,0 +1,448 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage{graphicx}
+\usepackage{fixltx2e}
+\usepackage{amsmath}
+\usepackage{mwe}
+\usepackage{float}
+\author{Elia Ravella}
+\title{Distributed System Recap}
+\begin{document}
+	\begin{titlepage}
+		\maketitle
+	\end{titlepage}
+	
+	\tableofcontents
+	\clearpage
+	
+	\part{Modeling}
+		\section{The software architecture of a distributed system}
+			With "software architecture" we describe the abstract view of a software system that helps us locate it in a certain technology stack, and how it interacts (or makes other components interact) with other systems.
+			
+			\subsection{Network OS based}
+				A system can rely directly on the operative system of the machine it's working on to access the network	. This makes the application platform dependent, because different machines on a network could have different operative systems.
+				
+			\subsection{Middleware based}
+				A middleware is a piece of software that masks the network interaction, providing advanced primitives to work with, in order to uniform the access to the network between application. It can also provide coordination, advanced communication and administration of the network. More on the services of the middleware in the next sections.
+		
+		\section{The run time architecture}
+			For run time architecture is intended the collection of software components, such as connectors, classes, data types, synchronization algorithms, that compose the software when it's up and running. All the run time architectures we'll see derives directly from the most common architectural styles used in software engineering.
+			
+			\subsection{Client Server}
+				Super classic architecture for a distributed system. Peers in the network have different roles (clients, who need computations, and servers, who can perform them) and communicate usually through messages or remote proceure invocation.\\
+				Servers expose a well-known interface where users can connect through clients; these interfaces are usually passive. The client server architectural style introduces the notion of tiers: being a layered architecture, functionalities may be split into a "stack" where each layer performs one of the three main application function: data management, business logic handling, presentation. This kind of interactions has lead the way for the 
+			
+			\subsection{Service Oriented Architecture}
+				Taking at the extreme the concept of tier, we can imagine an app as a collection of functionalities, and split these functionalities onto different machines. Then, the client accesses only the functions it needs, contacting the right server. This architecture adds a role to the classic service consumer - service provider schema: the service broker, that takes care of orchestrating the provider's API, describe them, act as a register and index of the services and as a fixed point for clients to reach functionalities.
+				
+				\subsubsection{Web Services}
+					“a software system designed to support interoperable machine-to-machine interaction over a network”. Simply the web adaptation of the SOA. Services are described with the Web Service Description Language and are indexed through the Universal Descritpion Discovery Integration system. The SOAP protocol implements web service interaction, that is built on top of HTTP (adding a layer on top of application layer).
+					
+					\paragraph{REST}
+						REpresentational State Transfer is simply a set of principles, that describes how a distributed system should be built and how it should behave. These principles are:
+						\begin{enumerate}
+							\item Interactions are client server
+							\item Interaction are stateless; the only state that can be transferred is encoded in the parameters
+							\item Data must be explicitly marked as non / cacheable
+							\item Opaque layers: each component cannot see beyond the layer he's interacting with
+							\item Clients must support code on demand
+							\item Interfaces must be defined all in the same way: this makes sure that
+								\begin{enumerate}
+									\item Resources are univocally reachable through a URI
+									\item Resources are manipulated through their representation
+									\item Messages are self descriptive: each message contains enough information to describe how it should be handled
+									\item Hypermedia as the engine of the application state
+								\end{enumerate}
+						\end{enumerate}
+			
+			\subsection{Peer to Peer}
+				P2P (is not a crime) is a model for distributed systems that does not assign explicit roles to peers connected to the network; instead tries to build (through coordination and orchestration) a system that "stand by itself" taking advantage of the edge resources of the network (i.e. the ones in the clients). P2P is a much more scalable architecture than client server. The main advantage of a peer to peer architecture is the direct exchange of resources (that can be computational power, network bandwith or plain old storage) between peers of the network.
+
+			\subsection{Object Oriented}
+				In a OO system, every component is a software object with a rigid and well defined interface. Peers pass around references of the objects to contact them, and object are invoked through messages or RMI. OO distributed systems inherit the OO programming paradigm principles, such as data obfuscation, uniform APIs and self contained components. It's a "peer to peer" model in abstract, but it's usually used to implement client server interactions. 
+
+			\subsection{Data Centered}
+				A data centered model enforces a kind of "single repository" architectural style. All data available to the application is stored in a central storage facility that encapsulates all the primitives (that depend on the richness of the interface, but usually provide the classic CRUD operations) to manage the data inside it. How the central repository manages these operations depends on the implementations: usually it's a passive RPC interface that requires synchronization. 
+				
+				\paragraph{Implementation: Linda}
+					Linda is a data sharing model studied for parallel computation. It manages data encapsulating it in tuples (vectors of attributes) that all belong to a \emph{tuple space} memorized in the central repository. The communication is persistent, content based and generative.\\
+					Like all central repository systems, these kind of platforms do not scale well.
+					
+			\subsection{Event Based}
+				The event based architecture, as the client server, assigns two distinct roles to peers: publisher and subscriber. The first produces content and adds it to the system, and the second consumes the content. The contents are routed towards the client \emph{that have explicitly expressed intereest for a certain topic}. So, a third actor lives in the system: a routing middleware that carries out all the message exchanging. The clients can subscribe to attributes of the contents as well as titles, or even perform a content based (templated) request for content: it's the middleware task to select the right contents at publishing time and routes to the clients that requested it.\\
+				This style enforces a comunication that is inherently asynchronous, message based, multicast and implicit. Publish subsribe network also enforces anonimous communication, also. 
+			
+			\subsection{Mobile Code}
+				With "mobile code" is intended the capability of a system to transfer the code or the state of execution between peers. We should define mobility first: \emph{strong mobility} is the capability to move both the code and the execution state to another machine; \emph{weak mobility} is the capability to move only the code from a machine to another.\\
+				Four models of mobile code can be defined, differentiating basiing on how code and state are handled or located.
+				\begin{itemize}
+					\item Code on demand: the client asks the server not for the result of a computation, but for the computation itself, then executes it locally and consumes the result
+					\item Remote evaluation: the client produces a piece of code to be executed on the server. The state usually is kept on the server, where the code is executed
+					\item Mobile agent: both the state of the application and the code are transferred and executed on another machine; this can be implemented through Object Oriented distributed systems, encapsulating the state in the objects' attributes 
+					\item Client server: the client asks a server to compute an operation and then consumes the result
+				\end{itemize}
+				
+				\paragraph{Implementation: CREST}
+					Computational REST is a first implementation of the mobile code paradigm: it proposes a client server interaction where data is manipulated not through \emph{representations} of it, but instead \emph{computations} of it, like closures or continuations. CREST axioms are the simply computational-adapted axioms of REST. 
+				
+		\section{The Interaction Model}
+			Two interaction styles between processes are possible:
+			\begin{itemize}
+				\item synchronous: the first process sends a message to the second one and stops his execution until a response is got
+				\item asynchronous: calling for remote resources (or message sending) does not block the execution. also, time managing may differ among peers: the interaction simply does not require synchronization of any kind
+			\end{itemize}
+			Obviously, the synchronous model is much stricter than the other one because of all the boundaries it poses to the exchange of messages and information. Every solution designed for async systems, in fact, works for sync system, but the vice versa is not true. 
+			
+		\section{Failure Model}
+			The failure model describes the various types of error that can occur in a network. Error can be
+			\begin{itemize}
+				\item channel failures
+				\item process failures
+			\end{itemize}
+			We distinguish three kind of errors:
+			\begin{itemize}
+				\item Omissions: data simply is not there. A process stops his execution, or a channel fails in sending the data
+				\item Byzantine failures: a process stops acting deterministically and starts sending "wrong" data. A channel corrupts data
+				\item Timing failures (only in synch systems): a process takes too much time computing; a channel takes too much time delivering/processing a message
+			\end{itemize}
+			
+			\subsection{Failure Detection}
+				Failure detection is the procedure via which a process network gets aware of an error. In synchronous systems, the use of keepalive messages overcomes the most tricky part of determining who's alivo and who's not; in async models instead, shit starts hitting the fan. It has been proven that distributed agreement (so a set of processes elects a value as a correct one) in an async system \emph{that can fail} is not virtually possible. 
+				
+	\part{Communication}
+		\section{Remote Procedure Call}
+			RPC is the mechanism adopted by various distributed systems to provide processes with the capability of calling a procedure that resides on another machine. It's inter process communication over a network. As the name suggests, RPC refers to purely procedural architectures, where there's little to no notion of application state.\\
+			One of the most complex aspects of RPC is how parameters are passed around: three main models of parameters passing are possible:
+			\begin{itemize}
+				\item pass by value (the value is copied and sent as is through the network)
+				\item pass by reference (a reference to the variable is sent; this approach is very difficult to implement in a distributed context, where references, that are usually implemented by pointers, lose their meaning when sent across different processes)
+				\item pass by copy / restore (a slight variation of pass by reference: in practice, the middleware send the value to be computed, copying it out from the reference passed as argument. At the end of the computation, the final value is written in the address)
+			\end{itemize}
+			Another difficult aspect to approach, reagrding the parameter passing, is how to deal with complex structures, that must be streamlined to bytes (serialized) is order to be passed. Also, memory representation may vary between processes or machines: the RPC middleware should take care of this aspect too, embedding the serialization and marshaling procedures in the middleware directly (enabling the programmer just to write the effective app code) and providing an Interface Definition Language to aid the description of the API.\\
+			One more ostic aspect: client server synchronization. Hardcoding the server address in the client's app code is the worst possible solution; instead, solution like the portmap (binding a service to a port informing the portmap daemon, that can then route incoming requests or tell which port is to be called in order to obtain a certain function) or a "service broker" approach (an external actor is devoted to centralize the exchange of requests of services and the address where the clients can find the requested service)
+			
+			\subsection{RPC's Interaction}
+				The base model of RPC is built as a synchronous system. However, semi-sinchronous and asynchronous implementations are possible. Most of them exploit a data type called "promise" (also called "future") that hosts the value that is remotely evaluated, but can be filled "after" the call is done, to avoid the waiting time of the network. This enforces lazy evaluation techniques. 
+				
+			\subsection{Batching and Queuing}
+				The call-response nature of the RPC systems is suitable for some kind of scheduling of the calls. Two models are possible: batched RPC and queued RPC. Queued RPC is pretty standard: requests are managed as they arrive to the stub. Instead, the idea behind batched RPC is to "batch together" the requests until a real-time one is issued, and then sending the whole batch to the server; this enhance performances reducing network calls.
+
+		\section{Remote Method Invocation}
+			RMI is: RPC in a object oriented world. The biggest difference/improvement is the ability to pass references around: the RMI middleware sends a skeleton of the object to the server, that uses it to access all the data structures of the sent object. The changes are then reflected in the main machine. A more complicated part of RMI wrt RPC is the logic built within the data structure? How do I serialize a function, to send an object with all his methods?\\
+			An advantage of the OO world is that there's almost no need of an IDL because the interface / implementation decoupling is built within OO languages and systems. 
+			
+		\section{Message Oriented Communication}
+			Instead of maintaining an active connection for a whole transaction, another approach to the exchange of information (where there is less need of a synchronous interaction, maybe) can be to encapsulate data into messages, and send them to the receiver machine that must be running a dedicated service that can recognize the message, interpret it and pass it to the above layers of the application. Message oriented systems enforces a low coupling/synchronism between sender and receiver of the messages: in some systems, not even an ACK of messages is needed. Other message oriented systems can also be persistent (opposite of \emph{transient}): not even both process are required to be running together to interact via messages.\\
+			Two main approaches are possible when it comes to manage message-oriented platforms: message passing and message queuing. Message passing (implemented for example through MPI) is a simple method where the middleware just takes the message and sends it through the network to the chosen receiver. The protocol can then be extended to multi-hop communication to extend the reach of a single user. Message queuing instead elevates the middleware at a central role in the system: in fact, it acts as the enpoint for all the messages, and routes them to the right receiver by itself. This approach is usually called MOM (message oriented middleware) and the "queue" regards the managing of the messages to/from clients: these messages are stored in queues (respectively of output/input to the mom).\\
+			
+			\subsection{Publish Subscribe}
+				The perfect example of a message oriented system is a publish-subscribe kind of application: the publishers encapsulates items in messages and then sends them to the middleware, that takes care of multicasting the message to the right subscribers. Subscribers must tell the middleware which events are they interested into: to do so, a event describer language is needed (also subscription language). This language can be of various types: it can filter events basing on attributes they specify that are encoded in each event, or can specify a template for the content itself of the events and ask to receive only the ones that adhere to such template.
+				
+				\paragraph{Event Dispatcher}
+					The central actor of the publish subscribe architecture is the event dispatcher, in other words the component that carries out all the routing of the events and of the subscription. Obviously, it should be distributed (we skip the recurring step of saying why a centralized point of routing does not work) and distributing a dispatcher poses the problem of how to route events and how to route subscriptions.\\
+					\begin{itemize}
+						\item Events: simplest approach, network flooding with events, then subscribers themselves will sort them out. Network usage is intense, in this case. Another way is to keep track (in the "local" event dispatcher) of the subscriptions of the connected clients, so to drop the event they're not interested in. This suggests a more hierarchical approach, where a single dispatcher have multiple "child nodes" and keeps track of their subscriptions
+						\item Subscriptions: again, a hierarchical approach is better than a flood-and-pray one: dispatchers can be organized in a tree. Obviously, this may happen only in cycles-free topologies. 
+					\end{itemize}
+					The event dispatcher can also make use of a DHT to route packets: this enforces a ringy overlay network to route subscriptions and events.
+			
+		\section{Stream Oriented Communication}
+			Stream oriented systems are suited for situations where data comes like a continuous flow of information. Multimedia streaming is the classical example. The major problem of stream-oriented communication (and in particular for streaming) is to concile fast transmission and QoS guarantees. This is often made by relying on a best effort protocol for transport (as UDP) and enforcing QoS at application level.
+			
+			\paragraph{QoS at application level}
+				When basing on a "fast and unreliable" protocol (UDP) Quality of Service enhancing techniques must be carried out at the current level.
+				\begin{itemize}
+					\item Error recovery: techniques like interleaving packets (that mitigate the effect of burst error) or error repairing (sending additional information in the very packet to rebuild in case of soft errors) can be used to ensure a error-free communication
+					\item Flow steadiness: to avoid listener stall (or lagging, when it comes to streaming) buffering techniques are ubiquitous: contents is buffered in the receiver before being sent to the application, then steadily served as a continous stream to the system.
+				\end{itemize}
+				Another problem to face is sender-receiver synchronization, especially in the case of multiple streams.
+				
+	\part{Naming}
+		\section{Flat Naming}			
+			\subsection{Flat naming approach in general}
+				When a system is said to use flat names for its peers it does not assign a meaning/value to the identifiers of the peers. This means that IDs of the connected hosts are just plain IDs and a the only procedure to match a name against an address (name resolving) is to have somewhere memorized this relation and to be able to access this information.
+			
+			\subsection{Name Resolving Techniques}
+				The procedure of "name resolving" links and address to a name/ID. In a flat named world, various methodologies can be put in place, but they all boil down to memorize somewhere the couple \{ name, address \} and accessing it.
+				\begin{itemize}
+					\item ARP approach: the network is flooded with "who knows x?" requests, then hosts that actually have a link to x responds with "I know x, he's in y"
+					\item Hierarchical approach: ARP does not work well is big sized network, so the name resolving is centralized to a special node that memorizes all the \{ name, address \} couples. This node is connected to all his hosts (that are the leaves of the tree) and to a parent node, that acts exactly like him: contains the \{ name, address \} of all peers of the subnetworks it's managing. Iterating this architecture leads us to a tree-like structure. PROBLEM: the root node should contain the information ragrding \emph{all} peers in the network. PARTIAL SOLUTION: heavy caching. 
+					\item Home based approach: a specific case of hierarchical system, where the tree has only three levels; the leaves, the homes, the root. The idea is: every "home" knows always where a peer associated to it is, and can always return his address. The root is useless in terms of name resolving, it's just there to completely connect the tree. PROBLEM: extra step towards home increases latency. PROBLEM: mobility makes the work of the home nodes difficult. 
+					\item DHT approach: as all the DHT the idea is the same, storing the couple \{ name, address \} in a hash table that then references other peers in the network for the lacking ones, in a ring-style fashion of overlay network.
+				\end{itemize}
+		
+		\section{Structured Naming}
+			In general: opposing to the flat naming approach (plain names with no meaning) the structured naming approach suggests a more functional use of the identifiers of the hosts, where every possible identifier is generated according to certain predetermined rules, so that all names belongs to a structured \emph{name space} and they're easier to lookup.
+			
+			\subsection{Structured naming systems's name resolution}
+				A system that makes use of structured names usually adopts a hierarchical approach to name resolution: in fact, every layer of the tree can carry out the routing of a certain part of the name. A perfect example is the filesystem: every name is composed of a tuple of identifiers that all together represents all the path from the root to the file (or directory) that name is referring to.\\
+				Systems like that (another example, the DNS) usually make use of different machines for every layer, and this pose the problem of how to efficently propagate the query? Is it better to recursively propagate the requests among all intermediate servers, or to iteratively send back to the client the address of the specific node it's requesting, descending the tree? 
+
+		\section{Attribute Based Naming}
+			In a distributed system, names can also be assigned basing on the attributes of the object to be referenced. This is useful (and meaningful) in systems where search queries are attribute based, like directory services or DBMSs. 
+			
+		\section{Removing unreferenced entities}
+			The naming system generates names and associates them to addresses. What happens when a name becomes unreachable, i.e. when all the references to it are deleted? It must be removed from the system. 
+			
+			\subsection{Reference counting}
+				Focusing on object-orientedish distributed systems, a method to remove unreferenced objects is to add to the single component the ability to count how many referencers are pointing at him. This is usually implemented through a decrementing counter that's decreased every time a reference is added and increased every time a reference is returned. When the counter is back to the initial value, the objects suicides.
+			\subsection{Weighted reference counting}
+				To overcome the inherent limitation of reference counting, a slight modification is weighting the references. The counter does not distribute a single share of otself, but a weighted reference (a >1 value) that than can undergo the same procedure when the reference needs to be passed around again.
+			\subsection{Reference listing}
+				Another approach that makes explicit use of the inward references is reference listing. Instead of giving away "shares", reference listing simply suggests to list all incoming references. When the list is empty, objects suicides.
+			\subsection{Distributed mark and sweep}
+				Tricky cases of isolated circular referencing can't be managed by the components themselves because it's very difficult to make them aware of a problem like that. Distributed mark and sweep instead proposes a network flooding algorithm that labels referenced entities (all white, if traversed grey, if all sons traversed black) then scans the whole memory of the machines to search for unreferenced entities. PROBLEM: blocking operation.
+	
+	\part{Synchronization and time}
+		\section{Absolute time solutions}
+			With "absolute time solutions" or "physical clock synchronizing" are intended all the algorithms/methodologies to synchronize all process against a clock that's universal (often a real clock) and keep all the process in line with the effective flow of time.
+			
+			\subsection{GPS' approach}
+				Atomic clocks are installed in every satellite and the delay between sending and receiveing a packet is kept in consideration during the calculation of the clock skew between packets. There's a complicated formula in 4 incognite to resolve to get to the actual time step.
+			\subsection{Cristians' algorithm}
+				The Cristians' solution consists of synchronizing all clocks against a fixed one in the network. Periodically, all peers send a "time request" to the "time server" that responds with the actual read time. The clients then add the round trip time to the received timestamp and updates its internal clock.\\ $clientTime = receivedTime + \frac{RTT}{2}$
+			\subsection{Unix time solution}
+				Unix clock synchronization works similarly to the Cristians' algorithm: the main difference is that time is not unique, but it's calculated averaging all the timestamps received from the clients, then sending to each the adjustment relative value.
+			\subsection{NTP}
+				Network Time Protocol is a protocol based on UDP that hierarchically distributes UTC timestamps.
+				
+		\section{Logical time}
+			Often, the actual flow of time is an information that is not needed, when a logical relationship between events is maintained among processes.
+			
+			\subsection{Scalar clocks}
+				A first solution is to maintain a scalar value for each process that's incremented every time a shared action (sending a message) is performed. When a process sends a message it includes its scalar clock. When a process receives a message it updates his own scalar clock to $max(ownScalar, receivedScalar) + 1$. This ensures a somewhat coherent logical flow of time in the processes.
+				\paragraph{Totally ordered multicast}
+					Scalar clocks can be used to obtain total ordering in a network. Every peer on the network timestamps the updates with his scalar clock and multicasts them to the network. All the acks for a message must be received before forwarding the message to the application. Eventually, due to the global ordering of messages the scalar clocks provide, all peers in the network receives all messages and are able to order them in the right order, assuming reliable FIFO links.
+				\paragraph{Mutual Exclusion}
+					Mutual exclusion is the condition that ensures that no processes access at the same time the same resource. Mutual exclusion can be simply achieved through the use of scalar clocks: a process floods the network with a request for a resource, attaching his scalar clocks. It will access the resource only if it receives an ACK from all other processes. If a process receives a request, three scenarios are possible:
+					\begin{itemize}
+						\item the process is not interested in the requested resource: it ACKs the request
+						\item the process is holding the resource: it does not ACK the request, but will do when it releases it; the requests are memorized in a local queue ordered by clock
+						\item the process is waiting for the resource: in this case, it must check wheter the scalar value in the request is greater or smaller than the one in his own request, and act accordingly: if it's smaller, it means that the incoming request is older than his own, so it acks it. In the opposite case, it does not. 
+					\end{itemize}
+					NOTE: a token ring network can also achieve mutual exclusion, in the case of a single circulating token.
+			
+			\subsection{Vector clocks}
+				Vectorized extension of the scalar clocks: a process does not hold anymore his internal (global) state, but the state of all the processes in his pool, memorized as scalar clocks in a vector. The updating mechanism is the same as scalar clocks but replicated on all elements in the vector.
+				\paragraph{Causal delivery}
+					There can be situation in which totally ordered multicast is a stronger condition than required. Vector clocks can be used to implement causal delivery: the update function for each process present an increment only on sending a message (not more also on receiving, the value on receive is only updated) and the vectorized clocks carry enough information to grant a causal relationship between messages.
+
+		\section{Leader election}
+			A coordinator is needed when performing certain parallel computation. If no leader is designated (or the current one fails), an algorithm to identify it must be developed and embedded in all the processes of the pool.\\
+			Leader election is the procedure that make all processes agree on the new coordinator. The minimal assumption that must be made is that nodes are \emph{distinguishable}. Also, the system must be \emph{closed}, so every node knows the IDs of all the other.
+			
+			\subsection{Bully algorithm}
+				When a process crash, the process that detects the fail sends to all the higher-pid processes a ELECT message. If he gets no responses he auto-elects himself and sends a COORD message to all processes. If a process have an higher PID than the one in the received ELECT message he responds and sends another ELECT message, with his pid now.
+				
+			\subsection{Ring based approach}
+				When the coordinator fails, the process that detects the failure sends to his \emph{successor} an ELECT message with his PID. When an ELECT message is received, a process checks if their PID is inside, and if it is, it changes the message to COORD with attached the highest PID in the packet. In two rounds of the ring a new leader is established.
+		
+		\section{Collecting global state}
+			For global state it's generally intended the set of states of the single processes in a network, \emph{plus} the state of the channels, at a given moment. To extend the normal "state" concept to a network, we introduce the \emph{cut}: a \emph{cut} is a set of events (of different processes) that is \emph{consistent} when for every event all his predecessors are in the cut. This means that a "message sent" event can always appear in a cut, but a "message received" can appear only if the "message sent" correlated is present.
+			
+			\subsection{Dsitributed snapshot}
+				Lamport's algorithm to record global state: it relies on \emph{reliable FIFO channels and strongly connected networks} and works this way
+				\begin{enumerate}
+					\item A process decides to start a snapshot, records its internal state and sends to all the connected peers a snapshot token
+					\item If a process receive a token, it closes the channel where he received it (so it will not accept further packets from that channel) records his internal state, broadcasts the tokens and starts recording the messages cominng from the opened channels
+					\item The distributed snapshot ends when all channels of all processes are closed.
+				\end{enumerate}
+				It has been proven that this method records a consistent cut. 
+			
+			\subsection{Dijkstra Scholten termination detection}
+				For diffusing computation (where every process is awaken when a message is received) telling a termination from a deadlock is no easy task. Dijkstra Scholten algorithm works by constructing a tree (daring today) out of the cuncurrent processes, and telling nodes to suicide if all their leaves are idle and the node itself is idle.
+
+		\section{Distributed transactions}
+			Transaction: sequence of basic data operation with the ACID properties. Atomicity, Consistency, Isolation, Durability. Transactions can be
+			\begin{itemize}
+				\item flat
+				\item nested
+				\item distributed: flat transactions for distributed data
+			\end{itemize}
+			Atomicity approaches: 
+			\begin{itemize}
+				\item private workspace
+				\item writeahead log: local modifications, distributed agreement on global modify
+			\end{itemize}
+			Cuncurrency control approach:
+			\begin{itemize}
+				\item 2PL or Strict 2PL
+				\item Optimistic timestamping: stamp \emph{only} data items with start time of transaction; at commit, if any items have been changed since start, rollback.
+				\item Pessimistic timestamping: every \emph{transaction} have a timestamp, and every operation must arrive "at the right time" (logically speaking) to be performed. For example, a write is committed only if its timestamp is the "newest" among the last read/write on the target data piece. (So, double timestamping: both data \emph{and} transaction)
+			\end{itemize}
+		
+		\section{Distributed deadlocks}
+			Deadlock: the condition in which a network of processes holds and requests resources in a "crossed" manner that implies the halting of all them, with no possibility of destalling. Obviously, distributed systems suffer from this problem, adding the complexity of discovering the deadlock among \emph{different machines}.\\
+			
+			\subsection{Distributed deadlock detection: Chandy Misra Haas}
+				A deadlock can be visualized on a resource graph by a cycle in the arcs. Using this property, the CMH algorithm works sending to all processes that are holding requested resources a probe message, and asking them to do the same. If the probe "completes the cycle" that process suicides. 
+			
+			\subsection{Distributed prevention}
+				Distributed prevention is the name that is usually used to define the design choices that are made to avoid deadlocks. One of those could be a "global timestamping" of processes that allows them to request an already occupied resource only if their timestamp is "older".
+				
+	\part{Replication consistency}
+		\section{Replication models}
+			\subsection{Active vs Passive}
+				A passive replicated system acts like a non replicated system (so single bottleneck for all operations) with backup copies (followers) that are cascadingly updated when the master propagates the new values of the data. To obtain K-fault tolerance, at least K+1 sopies must be active. NO SHARING OF WORKLOAD.\\
+				An active replicated system, instead, allows read and write operations from all copies. To ensure consistency, a coordination is needed:
+				\begin{itemize}
+					\item single leader systems make use of a single replica to coordinate among the others. While a read operation can be issued to any replica, all writes must pass through / be authorized by the leader. This architecture is suitable in particular cases in which it's not so costly to reach the leader for confirmation. 
+					\item multiple leaders systems, on the other hand, work by "replicating the leader". To avoid single-leader bottlenecks, a fleet of leaders can be deployed, that can speed up write operations. They must be synchronized among themselves also. 
+					\item leaderless system instead trust a more democratic approach to committing write operations: "a read on a certain value and a write operation can be performed iff enough replicas agrees on the value being read/written"
+				\end{itemize}
+			
+			\subsection{High availabity and consistency models}
+				A system is \emph{highly available} if it does not require blocking interactions in order to complete operations.
+				\subsubsection{Data centric models}
+					\paragraph{Strict consistency}
+						Strict consistency systems are difficult to build: the idea is that in a distributed system, no errors can happen and all peers are aware of the nature and timing of all operations in the network, so to build a consistent model (of data) locally.
+					\paragraph{Serializability}
+						There are few systems that \emph{need} strict consistency. Serializability is another "strict" model, that does not need "all knowing" peers. In fact, the only information peers should agree on is the order in which a certain set of operations (that can be of different peers on different data) is carried out.
+					\paragraph{Causal consistency}
+						Causal consistency systems preserves the order of the "logically connected" operations. So, the read-followed-by-write relationship and the write-followed-by-write realtionships must be agreed on among all peers.
+					\paragraph{FIFO consistency}
+						Least strict models, preserves only the order or write operations.
+				\subsubsection{Client centric models}
+					\paragraph{Read your writes}
+						If a client writes variable x with value A at time t1, for all times t2 > t1 it can't read an older value of x
+					\paragraph{Monotonic reads}
+						If a value x has been read on time t1, no older value can be read on time t2 > t1					
+					\paragraph{Monotonic writes}
+						Write operations are carried out before another write operation on the same variable is completed.
+					\paragraph{Write follows reads}
+						A write operation on x performed after a read on variable x is guaranteed to take place on the same or more recent value of x
+		\section{Update propagation}
+			\subsection{Propagation strategies}
+				Two approaches are possible when dealing with "who updates who"
+				\begin{enumerate}
+					\item Push upgrades ("Hey you! I got upgrades!")
+					\item Pull upgrades ("Hey you! Have you got updates for me?")
+				\end{enumerate}
+				
+			\subsection{Updates forwarding strategies}
+				A server has an update to spread. It can
+				\paragraph{Anti enthropy approach}
+					Select a single neighbour and update it
+				\paragraph{Gossiping}
+					Send an update to a server, that then sends to a server ecc. When the update comes back, reduces the probability to propagate it
+				\paragraph{Broadcasting}
+					Just a special case of gossiping at the end of the day
+	
+	\part{Fault tolerance}
+		\section{Agreement in process groups}		
+			\subsection{FloodSet algorithm}
+				The floodset algorithm is applicable to synchronous systems that also evolves synchronously. It resolves the agreement problem in a fail-silent scenario: in total, we are considering a very small group of distributed systems (fully synchronous, no timing failures, no byzantine failures). It's very simple, a set of values to be agreed on (values for a single variable) is passed around. If after n rounds (n number of faults to be proof-safe from) there are more than one values in the set, the returned value is the default one. 
+			\subsection{Byzantine failures handling}
+				If we add to the FloodSet hypothesis the possibility of byzantine failures things get messy. Lamport showed that a minimum of 3m+1 processes are needed to be m-fault tolerant.
+			\subsection{Impossibility of distributed agreement}
+				If we add asynchonicity it has been formal proven that distributed agreement is impossible.
+				
+		\section{Reliable group communication - faulty channels}
+			\subsection{Scalable reliable multicast}
+				NACK approach: instead of sending an ACK on every packet received, every process sets a timer that resets when a packet is received. If the timer reaches zero, a Negative ACK is sent. This reduces the number of packet on the network. 
+			\subsection{Hierarchical feedback control}
+				Super classic hierarchical control. Networks are divided in subgroups, each connected through a coordinator, that can apply the strategy he prefers in the subnetwork he coordinate. The coordinator subgroup is managed separately.
+				
+		\section{Reliable group communication - faulty processes and faulty channels}
+			\subsection{Close and virtual synchrony}
+				Close synchrony is the ideal model for synchrony: every process in a multicast group sees all the events in real time and all in the same order. Close synchrony cannot be achieved in presence of faulty processes.\\
+				Virtual synchrony is a model so that
+				\begin{enumerate}
+					\item crashed processes are kicked and must rejoin
+					\item all messages from non faulty processes are processed by all non faulty processes
+					\item messages from a faulty process are processed by all or by none
+					\item global ordering of relevant messages: "view changes" (so changes in the process pool structure) are send in a consistend order wrt the other multicasted messages
+				\end{enumerate}
+				\emph{All multicasts must take place between view changes}.\\
+			\subsection{Virtually synchronized systems - message ordering}
+				Possible ordering strategies for multicas messages:
+				\begin{enumerate}
+					\item unordered multicast.
+					\item causal ordering: the logic relationships among messages (as receive-send) are maintained, and FIFO. 
+					\item fifo ordering: messages sent in a particular order from a peer are received in the same order from all others.
+				\end{enumerate}
+				\paragraph{Total ordering}
+					A system is said to implement total ordering if all processes receive the same set of messages all in the same order. If A receives x before y, there's no way B receives y before x
+				\paragraph{VS implementation}
+					\begin{enumerate}
+						\item An external component detects a view change (process failure / channel break) and issues a view change to all the pool
+						\item All peers flush to the network the set of \emph{unstable messages}, the messages received that have not be acknowledged by the whole pool yet, and marks them as stable. When all processes have received an ACK for all the unstable messages they can restart communication. 
+					\end{enumerate}
+		
+		\section{Distributed commit}
+			\subsection{Two phase commit and three phase commit}
+				Distributed commit and distribute agreement suffer the same problems: all processes (non faulty) must agree on a single value ecc ecc.
+				\paragraph{Two phase commit}
+					Every process acts as a FSA with 4 states: init, wait, abort, commit. The initiator (or transaction manager) sends out a vote request, and when it receives all vote-commit messages broadcasts a global-commit. A peer in the init state waits for a vote-request and then either vote for commit and waits or aborts.\\
+					This method stalls if not all processes votes.
+				\paragraph{Three phase commit}
+					As two phase, but non blocking, and also can detect and overcome process failures. A state is added (pre commit) that signals the condition of having received only commits but not from all peers. If it's the coordinator that fails, a peer can deide what to do basing on which state has been reached by other participants. 
+		
+	\part{Big data}
+		\section{General information}
+			Big data is the term that describes all the data collected from various systems as a whole. Properties of big data:
+			\begin{itemize}
+				\item Velocity: data is collected / generated \emph{fast}
+				\item Variety: not only file formats, also the semantic of data can be various
+				\item Volume: lots of data
+				\item Veracity: possible incorrectness
+			\end{itemize}
+		
+		\section{Batched approach versus stream approach}
+			\subsection{Batch processing}
+				Data is collected and organized in batches that are indipendently elaborated and passed around. 
+			\subsection{Stream processing}
+				Data is a continuous stream of information. Operations are arranged as "filters" or "mappers" that modifies this stream until it reaches the desired format for output
+			\subsection{Comparison}
+				\paragraph{Latency}
+					Batched approaches suffer of high latency in the case of intermitting data flow, because of the need of organize data in batches. Stream oriented approaches are less latent, due to the intrinsic "elaborate on the fly" architecture.
+				\paragraph{Throughput}
+					Batched systems are more efficient in term of throughput, due to the scheduling that can be applied to batches to optimize the flow of data.
+				\paragraph{Load balancing}
+					Batched systems (for the same reasons of their advantages in throughput) can apply more sophisticated load balancing operations.
+				\paragraph{Elasticity}
+					Stream oriented systems are very rigid: the operation must take place in a determined order at a certain time, and scheduling cannot be applied. 
+				\paragraph{Fault tolerance}
+					You kidding me? Resuming a stream oriented computation after a failure is much more complicated than a batched one.
+					
+	\part{P2P}
+		\section{Design of a p2p system}
+			A p2p system has no centralized actors all clients rely on to carry out a specific operations. Instead, all peers are interconnected and they exchange directly resources, wheter this are data, storage, bandwidth and so on. 
+		
+		\section{Approaches to search and lookup}
+			Searching for a resource is a critical point in a p2p system. Three classical approaches:
+			\paragraph{Centralized search}
+				Napster's solution: all operations are fully decentralized but search and lookup, that go through a fixed point of the network that has all the information.
+			\paragraph{Hierarchical approach}
+				Kazaa's approach: same as napster, but the central fixed point is itself a distributed system of peers that acts as a single one. A client connects always to a central fixed peer to search, and then to the single peer to exchange resources.
+			\paragraph{Fully decentralized approach - query flooding}
+				Gnutella adopts a different style when it comes to network organization: no central authority (at all) and network flooding for request. To avoid network overflow, search packets include an HopsToLive field. 
+				
+	\part{Security}
+		\section{Design issues}
+			Security can be placed in 3 different places in a distribute network: on the data, encypting it; on the operation thatcan be performed on data, to limit the changes and threats to it; on the user, limiting their capabilities.
+		\section{Certification}
+			\subsection{Certification authority}
+				What is a CA? It's a well known entity that ensures the veridicity of a certificate, so a tuple name + key used to associate a person to a key. CA are \emph{well known} in the sense that the power of their role relies on the universality of the CA identity information. Checking all keys manually is a hell, so CA adopts a hierarchical approach. Every certificate has an expiration date.
+		\section{Secure channel}
+			Secure channels provide protection from spoofing and data alteration. The authentication happens in a challenge response fashion, where each peer asks the other to encrypt some data with a shared key, then verifies if the data is encrypted correctly. A solution with an asymmetric key is the classic HTTPs approach. A Key Distribution Center can avoid key wearing and can lift the network from the burden of generating and destroying the keys. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\end{document}

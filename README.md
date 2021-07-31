@@ -40,7 +40,7 @@ are present my notes:
 - [x] Data Base 2
 - [x] Formal Languages and Compilers
 - [ ] Principles of Programming Languages
-- [x] Software Engineering 2 (only project part)
+- [ ] Software Engineering 2
 - [x] Distributed Systems
 - [ ] Foundations of Operative Research
 - [ ] Model Identification and Data Analysis
