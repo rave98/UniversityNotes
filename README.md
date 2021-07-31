@@ -39,11 +39,11 @@ Computer Science and Engineering at Politecnico di Milano, and of which
 are present my notes:
 - [x] Data Base 2
 - [x] Formal Languages and Compilers
-- [] Principles of Programming Languages
+- Principles of Programming Languages
 - [x] Software Engineering 2 (only project part)
 - [x] Distributed Systems
-- [] Foundations of Operative Research
-- [] Model Identification and Data Analysis
+- Foundations of Operative Research
+- Model Identification and Data Analysis
 - [x] Advanced Computer Architectures
 - [x] Computing Infrastructures
 - [x] Formal Methods for Cuncurrent and Real Time Systems
