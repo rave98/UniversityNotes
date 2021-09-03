@@ -42,7 +42,7 @@ are present my notes:
 - [ ] Principles of Programming Languages
 - [ ] Software Engineering 2
 - [x] Distributed Systems
-- [ ] Foundations of Operative Research
+- [x] Foundations of Operative Research
 - [ ] Model Identification and Data Analysis
 - [x] Advanced Computer Architectures
 - [x] Computing Infrastructures
