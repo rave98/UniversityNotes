@@ -43,7 +43,7 @@ are present my notes:
 - [ ] Software Engineering 2
 - [x] Distributed Systems
 - [x] Foundations of Operative Research
-- [ ] Model Identification and Data Analysis
+- [x] Model Identification and Data Analysis
 - [x] Advanced Computer Architectures
 - [x] Computing Infrastructures
 - [x] Formal Methods for Cuncurrent and Real Time Systems
