@@ -1,6 +1,5 @@
 \documentclass[10pt,a4paper]{article}
 \usepackage{graphicx}
-\usepackage{fixltx2e}
 \usepackage{amsmath}
 \usepackage{amsfonts}
 \usepackage{mwe}
@@ -82,7 +81,7 @@
         
         \section{Infinite Grammars}
             A grammar is said to be infinite\\
-            $\Leftrigharrow$\\
+            $\Leftrightarrow$\\
             A grammar has a recursive production\\\\
             The grammar is assumed to be clean and free from circular derivation. 
 	       
@@ -186,7 +185,7 @@
 				A grammar is said to be linear if every rule of that grammar is in the A $\rightarrow$ uBv form, where A and B non terminals (B can also be $\epsilon$) and u and v terminal symbols.\\
 				If only one of the two terminals is present the grammar is said to be right- or left-linear, wheter the nonterminal is right or left side of the terminal symbol.\\
 				A grammar where all rules are either right or left linear is said unilinear. A strict unilinear grammar has only one terminal per side of the rule.\\
-				\subsubsection{Relation with regular expressions} regular languages are a subset of unilinear languages: REG $\supseteq$ UNI; moreover, from an uniliear grammar we can always derive a regular expression with the same expressiveness $\Rightarrow$ UNI $\superseteq$ REG. We obtain (IMPORTANT) UNI $\equiv$ REG.
+				\subsubsection{Relation with regular expressions} regular languages are a subset of unilinear languages: REG $\supseteq$ UNI; moreover, from an uniliear grammar we can always derive a regular expression with the same expressiveness $\Rightarrow$ UNI $\supseteq$ REG. We obtain (IMPORTANT) UNI $\equiv$ REG.
 	
 	\clearpage	
 	\part{Finite Automaton as Regular Language Recognizers}
@@ -344,7 +343,7 @@
 	
 	\clearpage
 	\part{Pushdown automata and parsing}
-		Pushdown automaton: a finite state machine enriched with a LIFO queue (or \emhp{stack}) as memorization device, that supports the classical push-pop operations. It's useful to portay this device with a terminator on the bottom, so that it signals the emptiness of the stack. Even a single-state nondeterministic pushdown automaton can (with only the stack) be used as a recognizer; this is called \emph{daisy automaton}.\\
+		Pushdown automaton: a finite state machine enriched with a LIFO queue (or \emph{stack}) as memorization device, that supports the classical push-pop operations. It's useful to portay this device with a terminator on the bottom, so that it signals the emptiness of the stack. Even a single-state nondeterministic pushdown automaton can (with only the stack) be used as a recognizer; this is called \emph{daisy automaton}.\\
 		To define a pushdown automaton we just expands the FSA deefinition with the stack alphabet and a special character from this alphabet, the stack bottom / terminator / initial stack symbol. REMEMBER: the transiction function doeas not depends solely on the given input anymore, but also on the stack's top symbol; the domain is changed, wrt the classic FSA.\\
 		Domain and range of the transiction function for a FSA: (set of states) $\times$ (input alphabet) $\rightarrow$ (set of states)\\
 		Domain and range of the transiction function for a PDA: (set of states) $\times$ (input alphabet) $\times$ (stack alphabet) $\rightarrow$ (set of states) $\times$ (stack alphabet)\\
@@ -514,7 +513,7 @@
 						\begin{center}
 							\includegraphics[width = \textwidth]{./images/ex2Pilot.png}
 						\end{center}
-					\end{figure}\\
+					\end{figure}
 					Again, I add a short list of things to be noted
 					\begin{itemize}
 						\item the first transition labeled "a" is the perfect example of \emph{following a paht makes you inherit lookaheads};
@@ -614,7 +613,7 @@
 						E \rightarrow E * E \\
 						E \rightarrow ( E ) \\
 						E \rightarrow i
-					\end{cases} && 
+					\end{cases} 
 					\begin{cases}
 						E \rightarrow \text{add } E \text{ } E \\
 						E \rightarrow \text{mult } E \text{ } E \\
@@ -743,7 +742,7 @@
 					\end{enumerate}
 					So, now we have a grammar and a set of attributes with a semantic value that must be linked to certain nonterminals. To do so, we can define functions (associated to every production) that computes the value of the nonterminal of the reduction. In this case:
 					\begin{equation}
-						G_L_ext = 
+						G_{L_ext} = 
 						\begin{cases}
 							N \rightarrow D \bullet D \text{ sum of the right with the left part: } v_0 = v_1\,+\,v_2\times 2^{-l_2} \\
 							D \rightarrow D \, B \, \vert \, B \text{ also consider the length increase: } 
@@ -833,7 +832,7 @@
 				\subsubsection{Formal Definition of an Attribute Grammar}
 					An attribute grammar is composed of:
 					\begin{enumerate}
-						\item A context-free grammar $G = \langle V, \Epsilon, P, S \rangle$ with her set of terminals, nonterminals and the axiom. It is convenient to NOT have the axiom in the right part of the rules
+						\item A context-free grammar $G = \langle V, \epsilon, P, S \rangle$ with her set of terminals, nonterminals and the axiom. It is convenient to NOT have the axiom in the right part of the rules
 						\item A set of semantic attributes, associated with terminals and nonterminals. This set is separated in left attributes and right attributes: \emph{the two sets are disjoint. No right attribute can be left attribute in another production and vice versa}. The set of attributes of nonterminal D is also referred to as $attr(D)$
 						\item A set of semantic functions, each associated with a grammar rule. The grammar rule associated with each function is called the support of that function. In general, several functions can have the same support, and the set of functions supported by production p is $fun(p)$. Semantic functions are formally defined as:
 							\begin{equation}
@@ -871,7 +870,7 @@
 						So how to check for "onesweepness"? We shall recall the definition of the $dep$ set, and introduce the \emph{sibling graph}:
 						\begin{enumerate}
 							\item The nodes are the right symbols of the productions $\{D_1\,...\,D_r\}$.
-							\item Arcs $D_i \,\rightarrow\, D_j$ are drawn between nodes that have an attribute dependency like $\sigma_D_i \,\rightarrow\, \theta_D_j$. The nodes in the siblings graph \textbf{are not} the ones of the dependence graph of the production. 
+							\item Arcs $D_i \,\rightarrow\, D_j$ are drawn between nodes that have an attribute dependency like $\sigma_{D_i} \,\rightarrow\, \theta_{D_j}$. The nodes in the siblings graph \textbf{are not} the ones of the dependence graph of the production. 
 						\end{enumerate}
 						Let's generate a sibling graph for a dummy rule, $D\rightarrow A\,B\,C$ that has the dependency graph as below:
 						\begin{figure}[H]
