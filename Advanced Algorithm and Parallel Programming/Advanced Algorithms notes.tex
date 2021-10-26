@@ -1,0 +1,699 @@
+\documentclass{article}
+
+\usepackage[a4paper, total={15cm, 24.5cm}]{geometry}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{amsmath}
+
+\usepackage[dvipsnames]{xcolor}
+\usepackage{listings}
+\lstloadlanguages{Ruby}
+\lstset{
+	basicstyle=\ttfamily\color{black},
+	commentstyle = \ttfamily\color{green},
+	keywordstyle=\ttfamily\color{blue},
+	stringstyle=\color{orange}}
+
+\title{Advanced Algorithms and Parallel Programming}
+\author{Elia Ravella}
+\begin{document}
+	\begin{titlepage}
+		\maketitle
+	\end{titlepage}
+	
+	\tableofcontents
+	\clearpage
+
+	\part{Advanced Algorithms}
+	\section{Algorithms Recall}
+		An algorithm is a well defined computational procedure that takes some value as input and produces some value as output after a finite sumber of steps.
+		
+		\paragraph{Algorithm Performance - Complexity}
+			A straightforward performance index for an algorithm is his running time. Obviously, the running time depends on the size of the input, so making the performance index parametric wrt the input size is the best way to compare algorithms. Generally, we look for upper bounds of running time, as a guarantee; but three main analysis can be carried out:
+			\begin{itemize}
+				\item worst case scenario (big $O$ notation): maximum time of the algorithm for an input of fixed size
+				\item average case scenario ($\Theta$ notation): expected time for a fixed size input. To comeplete an analysis like this one, we need assumption on the distribution of the input
+				\item best case scenario ($\Omega$ notation): analize the \textit{minimum time required to terminate} with the best possible combination of input. It's useful because provides a lower bound of performance for an algorithm (we "can't do better" with that algorithm)
+			\end{itemize}
+			When we compare complexity curves, we must not forget the fact that those are dependent from the input instance size. For sufficently large inputs, then a $n^2$ complexity always beats an $n^3$, but it's not so when instances are small enough. Use complexity to help structure the design phase, not as the one and only performance index to use.
+
+			\subparagraph{The Master Method}
+				To solve recurrencies (analysis of complexity for algorithms expressed as mere time functions of the input) of the form
+				\begin{equation}
+					T(n)\, =\, aT(\frac{n}{b})\, +\, f(n)
+				\end{equation}
+				where $a \geq 1$, $b > 1$ and f is asymptotically positive, we can use the \textit{master method}, that gives use the complexity for three common cases, basing itself on the $f(n)$ function:
+				\begin{itemize}
+					\item $f(n) = O(n^{\log_ba\, -\, \epsilon})$ for some $\epsilon > 0$. The total algorithm complexity then is
+						\begin{equation}
+							T(n) = \Theta(n^{\log_ba})
+						\end{equation}
+					\item $f(n) = \Theta(n^{\log_ba} \log_e^kn)$ for some $k \geq 0$. The total algorithm complexity then is
+						\begin{equation}
+							T(n) = \Theta(n^{\log_ba} \log_e^{k+1}n)
+						\end{equation}
+					\item $f(n) = \Theta(n^{\log_ba\, +\, \epsilon})$ for some $\epsilon > 0$. The total algorithm complexity then is
+						\begin{equation}
+							T(n) = \Theta(f(n))
+						\end{equation}
+				\end{itemize}
+
+	\section{Design Paradigms for Algorithms}
+		\subsection{Divide and Conquer}
+			Super classic algorithmic approach to problem solving:
+			\begin{enumerate}
+				\item Divide the problem into simple subproblems
+				\item Solve the subproblems, if needed recursively divideng them further
+				\item Combine the results
+			\end{enumerate}
+
+			\paragraph{Merge Sort}
+				DeC applied to sorting results in the famous merge sort algorithm:
+				\begin{enumerate}
+					\item Split the array
+					\item Sort the two subarrays
+					\item Linear time merge
+				\end{enumerate}
+				resulting in a total complexity of $T(n) = 2T(\frac{n}{2}) + \Theta(n)$ that can be easily worked out with the master theorem: it falls in the second case with k = 0. This leaves us with a total complexity of $\Theta(n\, \log(n)$.
+
+			\paragraph{Binary Search}
+				DeC applied to searching an element in a \underline{sorted} array
+				\begin{enumerate}
+					\item Check middle element
+					\item Recursively search a single subarray
+					\item Find element
+				\end{enumerate}
+				total complexity: $T(n) = T(\frac{n}{2} + \Theta(1)$. Again, through the Master Method, we obtain a complexity of $T(n) = \Theta(\log(n))$
+
+			\paragraph{Number Power}
+				Computing $a^n$ in underlinear complexity: with divide and conquer is possible. Just apply
+				\begin{equation}
+					a^n = 
+					\begin{cases}
+						a^{\frac{n}{2}}\cdot a^{\frac{n}{2}} \text{ when the exponent is even}\\
+						a^{\frac{n-1}{2}}\cdot a^{\frac{n-1}{2}} \cdot a \text{ when the exponent is odd}
+					\end{cases}
+				\end{equation}
+				This algorithm has the same complexity of the binary search one: $T(n) = \Theta(n)$
+
+			\paragraph{Matrix Multiplication}
+				Row per coloumn multiplication of two matrixes, standard algorithm executes in $\Theta(n^3)$, it mimics the "by hand" procedure. DeC approach: consider each matrix as a $2\, \times\, 2$ matrix of submatrixes that are "half the lenght", and then recursively go down to the single elements. in the end, add all.\\
+				Resulting complexity:
+				\begin{equation}
+					T(n) = \underbrace{8T(\frac{n}{2})}_{\text{the 8 resulting submatrixes}} + \underbrace{\Theta(n^2)}_{\text{adding the matrixes together}}
+				\end{equation}
+				With the master method, we still obtain a complexity of $\Theta(n^3)$ (case 1) so no improvement. The winning idea here is to reduce the number of multiplications needed to find the result of the reduced problem, from 8 to 7, using the Strassen's algorithm. This then changes the first term in the complexity description to $T(n) = 7T(\frac{n}{2}) + \Theta(n^2)$. We still fall in the first case of the Master Method, but this time the difference is in the exponent, reduced from 3 to 2,81. The improvement here is noticeable in not-so-small instances of the problem, of course, and become way more significant when the instances dimension grows.
+
+	\section{Randomized Algorithms}
+		Randomized algorithms exploits some probabilistic features of the inputs in order to run "at best on the average case". We call a randomized algorithm an algorithm that depends not only on the input it's given, but also on a random number generated inside the algorithm.\\
+		To actually evaluate the performances of the algorithm we make use of \textit{indicator random variables} that are simple binary variables that indicates wheter something is happened or not.
+
+		\subsection{Monte Carlo Algorithms}
+			Monte Carlo algorithms are randomized algorithms that \textit{can return a wrong result}, but with little probability. In the case this probability is non null, the problem is said to have a \textit{two sided error}.
+	
+			\subsubsection{Las Vegas Algorithms}
+				Las Vegas algorithms are randomized algorithms that (differently from Monte Carlo ones) \textit{always return correct results}, but they directly depends on some random  choices; this implies that the running time can vary even with identical input, thus rendering the \textit{average running time} very difficult to compute.
+
+			\subsubsection{Karger's min-cut algorithm}
+				Minimum cut problem: to find the cut (on a connected undirected weighted graph) with the \textit{minimum possible capacity}. The general algorithm computes $n - 1$ times the so called "st-cut problem", that only considers the "weight flow" between two fixed nodes. Karger's approach is based on randomization and contractions\footnote{make two nodes coincidental in a graph, "collapse"}: by contracting together nodes we will eventually find a cut of the graph, that will be represented by the arcs that go through the "central most contracted node".\\
+				So the Karger algorithm translates to:
+				\begin{enumerate}
+					\item pick a random edge
+					\item contract it (doing so, remove self-loops)
+					\item repeat 1 and 2 until the graph has only two nodes
+					\item check the obtained cut
+					\item repeat in case
+				\end{enumerate}
+				The average complexity is far less that the linear programming formulation of the problem. Moreover, statistically speaking and given enough runs, the Karger's algorithm finds the solution far before the "traditional" linear programming algorithm, that runs in $O(n \cdot m \cdot \log (\frac{n^2}{m}))$ where \emph{n} and \emph{m} represent nodes and edges number, respectively.\\
+				An improved version of this algorithm was provided by Karger himself, after the observation that is very unlikely to pick a min cut edge \textit{at the beginning} of the algorithm wrt the end of the procedure. The thing that changes here is the last step of the algorithm: instead of restarting from the beginning (so from the complete graph) it restarts from an \textit{intermediate graph} with a reduced number of nodes and then compares the two obtained results. This improvement is huge: it reduces the running time to $n^2 \cdot \log(n)$, with an error probability that's polynomial.
+
+			\subsubsection{Randomized Quicksort}
+				Classic quicksort is an $O(n \log (n))$ in place sorting algorithm, using the divide and conquer approach. The algorithm can be seen as an "in place merge sort": it divides the algorithm around a \textbf{pivot} element and recusively sort the two portions of array.\\
+				The random formulation introduces randomness in the pivot selection, in particular in the selection of the indexes that produces the pivot. This ensures that the running time is \textit{indipendent} of the input order. We end up with an average complexity of $n \log (n)$.
+				\begin{lstlisting}[language=Ruby]
+# randomized adjustement to quicksort algorithm, where the pivot is 
+# randomly chosen each time
+def rand_partition(arr, bottom, top)
+  pivot = Random.new.rand(bottom..top)
+
+  swap = arr[pivot]
+  arr[pivot] = arr[top]
+  arr[top] = swap
+  return partition(arr, bottom, top)
+end
+
+# partitioning and swapping subroutine
+# this just moves the lower values to the left 
+# and the higher to the rights
+def partition(arr, bottom, top)
+  last = arr[top]
+  first = bottom - 1
+
+  for current in bottom..(top - 1)
+    if arr[current] <= last
+      first = first + 1
+
+      # swap elements
+      swap = arr[current]
+      arr[current] = arr[first]
+      arr[first] = swap
+    end
+  end
+
+  # swap the highest left value with the right value
+  # from the pivot point of view
+  swap2 = arr[first + 1]
+  arr[first + 1] = arr[top]
+  arr[top] = swap2
+
+  return (first + 1)
+end
+
+# simply divide
+def quicksort(arr, bottom, top)
+  if bottom < top
+    pivot = rand_partition(arr, bottom, top)
+    quicksort(arr, bottom, pivot - 1)
+    quicksort(arr, pivot + 1, top)
+  end
+end              
+				\end{lstlisting}
+				Complexity analysis of quicksort and randomized quicksort: we can see how the PARTITION subprocedure, when it's not randomized, can yield to an optimal case, where the array is split in half, and a worst case, where the array is split in a $n-1$ long subarray and another of length zero. So the randomized approach ensures that the recursion tree of this procedure is always $\Theta(\log(n))$ and having $O(n)$ work done at each level we end up with $O(n \cdot \log(n))$.\\
+				We should focus on the PARTITION subprocedure because it's the core of the complexity of the entire algorithm, and because it has two interesting properties:
+				\begin{enumerate}
+					\item the time spent in there dominates the complexity of the algorithm
+					\item it's called \textit{at most} \emph{n} times					
+				\end{enumerate}
+				the call itself is a $O(1)$ operation plus the complexity induced by the \verb|for| loop that swaps the elements in the array. So, the total complexity of the algorithm \textit{heavily depends} on the number that the instruction \verb|if arr[current] <= last| is executed. Our aim is this, to compute \emph{X} the number of comparisons performed across all calls to PARTITION. So the total complexity of the algorithm is $O(n + X)$. $X_{ij}$ is so the indicator binary variable for "element \emph{i} is compared with element \emph{j}". Obviously, $X = \Sigma_{i = 1}^{n-1} \Sigma_{j = 1}^{n} X_{ij}$. If we apply the expexted value operator to this formula we are left with the probability that element \emph{i} is compared with element \emph{j}.\\
+				This is:
+				\begin{align*}
+					Pr\{z_i \text{ is compared to } z_j\} = Pr\{z_i \text{ or } z_j \text{ are chosen as pivot }\} = \\
+					= \frac{1}{\text{number of elements in subarray}} \times 2 = \\
+					= \frac{2}{i - j + 1}
+				\end{align*}
+				Substituting this equation in $E[X] = E[\Sigma_{i = 1}^{n-1} \Sigma_{j = 1}^{n} X_{ij}]$ we obtain
+				\begin{align*}
+					E[X] = \sum_{i = 1}^n \sum_{j = 1}^{n - 1} \frac{2}{i - j + 1} \\
+					< \sum_{i = 1}^n \sum_{j = 1}^{n - 1} \frac{2}{i - j} \\
+					= \sum_{i = 1}^{n - 1} O(\log(n)) = O(n \cdot \log(n)) \text{ armonic series}
+				\end{align*}
+						
+			\subsubsection{Randomized Selection - Order Statistics}
+				The algorithm can be described as "find the \emph{i}-th smallest/greatest number of a collection", so the element with rank \emph{i}. The naive idea is: sort the collection ($\Theta(n \cdot \log(n))$) then take the \emph{i}-th element ($\Theta(1)$). Total complexity: $\Theta(n \cdot \log(n))$.\\
+				There's an algorithm, derived from quicksort\footnote{it even uses the same RANDOMIZED-PARTITION function}, with expected running time in $\Theta(n)$ to find the \emph{i}-th element, which has $\Theta(n^2)$ as worst case complexity.\\
+				The algorithm is quite simple: it uses the RANDOMIZED-PARTITION function of the quicksort algorithm in order to partition the array around a pivot element (choosen at random): after that, all the smaller elemets will be on the left and the greater on the right. Then, it checks if the \textit{order statistic} is equal to the number of elements in the "lesser" subarray, adding 1 to this value to keep track of the pivot element itself. If they're equal, we've found our element. If not, we resort to check a single subarray of the two:
+				\begin{itemize}
+					\item the greaters one if the order statistic is greater than the number of elements in the first subarray
+					\item the smallers if not
+				\end{itemize}
+				\begin{lstlisting}[language=Ruby]
+def select_ith(arr, head, tail, order_statistic)                                                                                                                       
+  return arr[head] if head == tail
+  
+  # so now we've partitioned the array
+  pivot_index = rand_partition(arr, head, tail)
+
+  # temptative represents the k-th index of the array
+  temptative = pivot_index - head + 1 
+
+  if temptative == order_statistic
+    return arr[pivot_index]
+  elsif order_statistic < temptative
+    return select_ith(arr, head, pivot_index - 1, order_statistic)
+  else
+    return select_ith(
+      arr, 
+      pivot_index + 1, 
+      tail, 
+      order_statistic - temptative
+    )
+  end
+end
+				\end{lstlisting}
+				The complexity is given by the recurrence
+				\begin{equation}
+					T(n) \leq \sum_{k = 1}^n (X_k \cdot (T(\max(k - 1, n - k))) + O(n))
+				\end{equation}
+				Where
+				\begin{itemize}
+					\item $X_k$ is a binary variable that is 1 for the \emph{k}th partition when it produces a \emph{k} elements split. This variable is here to help with the expexted value analysis, because it has $E[X_k] = \frac{1}{n}$.
+					\item $T(\max(k - 1, n - k))$ is the \textit{pessimistic assumption} of this recursion: in order to calculate an upper bound, we hypotize that the element we're looking for is always in the bigger subarray
+				\end{itemize}
+				\begin{align*}
+					\sum_{k = 1}^n (X_k \cdot (T(\max(k - 1, n - k))) + O(n)) = \sum_{k = 1}^n (X_k \cdot (T(\max(k - 1, n - k)))) + O(n) \\
+					\Rightarrow E[T(n)] = \sum_{k = 1}^n (\frac{1}{n} \cdot E[(T(\max(k - 1, n - k)))) + O(n) 
+				\end{align*}
+				The problem here is that $\max$ function in the center of the recurrence. But, we can analyze the two subproblems to get rid of it. We knwo that that function will return
+				\begin{equation}
+					\max(k - 1, n - k) =
+					\begin{cases}
+						k - 1 \text{ when } k > \lceil \frac{n}{2} \rceil \\
+						n - k \text{ when } k \leq \lceil \frac{n}{2} \rceil
+					\end{cases}
+				\end{equation}
+				if \emph{n} is even, being \emph{k} spanning from 1 to \emph{n}, we have that the first $\frac{n}{2}$ terms appears exactly twice, so $\max(k - 1, n - k) = 2k$. If not, we simply have an "extra term" that is $\lfloor \frac{n}{2} \rfloor$.\\
+				We end up with
+				\begin{equation}
+					E[T(n)] = \frac{2}{n} \sum_{k = \lfloor \frac{n}{2} \rfloor}^{n-1}(T(k)) + O(n)
+				\end{equation}
+				where $T(k) = O(n)$ can be proven by substitution.
+
+			\subsubsection{Primality Test}		
+				For "primality test" is intended the boolean procedure to verify if a number is actually a prime number (so is divisible only for itself and 1). The super naive approach is to check if the number is 2, check then parity, then cycle through 3 and $\frac{\sqrt{n}}{2}$ to find a evenly divisor of the considered number.
+				\begin{lstlisting}[language=Ruby]
+def is_prime(n) 
+  return false unless n.is_a? Integer
+  if n%2 == 0                                                                                                    
+    return false                                                                                                 
+  else                                                                                                            
+    (3..(Integer.sqrt(n)/2).floor()).each {                                                                       
+      |d|                                                                                                        
+      return false if n%(2*d + 1) == 0                                                                           
+    }                                                                                                            
+  end                                                                                                            
+  true                                                                                                            
+end   
+				\end{lstlisting}
+				This algorithm has a $\Theta(\sqrt{n})$ complexity.\\
+				The randomized version is a one-sided error, false biased Monte Carlo algorithm: the result is always correct if negative, and can be wrong (with a little probability) if it's positive. This exploits the Fermat's Theorem: "each odd prime numbers divides $2^{p - 1} - 1$". So a polynomial approach can be: calculate $z = 2^{n - 1} \,mod\, n$ and check if it's 1: then the number it's possibly prime, otherwise surely isn't (it's composite). This test is also called pseudoprimality test, because numbers that satisfies such property are called \textit{base-a pseudoprimes}, where \emph{a} is the base of the power(2, in our case). The probability to find a pseudoprime that's not prime in a $\beta$-bit encoded number tends to zero when $\beta \,\rightarrow\, \infty$. In a 1024-bit encoded number, the probability of random picking a base-2 pseudoprime that is not prime are less that 1 in $10^{41}$: this makes this version of the algorithm useful (and insanely fast) for most of the usual applications.
+				\begin{lstlisting}[language=Ruby]
+def is_pseudoprime(n)
+  return false unless n.is_a? Integer
+  return (2**(n - 1) % n == 1)                                                                                    
+end
+				\end{lstlisting}
+				We actually cannot get rid of the small error margin of this algorithm, due to Carmicheal numbers\footnote{I don't want to go down this algebraic-arithmetic rabbit hole, ok?}.
+
+				\paragraph{Miller Rabin Las Vegas Version}
+					Actually, a Las Vegas version of the primality test does exist, and it's a modification of the previous algorithm that introduces randomization. The two main changes are:
+					\begin{itemize}
+						\item base \emph{a} is not fixed, but chosen at random. Also, in an iteration several values are tried
+						\item It performs an additional "nontrivial square root" check, that if succeeds signals a composite number
+					\end{itemize}
+					The nontrivial square root check is fairly simple, as the definition of a nontrivial square root is: \emph{a} is a nontrivial square root of $1 \mod n$ if $a^2 \mod n = 1 \wedge a \neq 1 \wedge a \neq n - 1$. Do not be scared! That only means that \emph{a} is the square root of a number that's \textbf{\underline{modulo equivalent}} to $1 \mod n$. We will use this to prove that a number is not composite. Here's some Ruby code that implements that:
+					\begin{lstlisting}[language=Ruby]
+is_probably_prime = false
+
+def power(base, iter, number)
+  # recursive computation of the power of the number
+  # in order to find a nontrivial square root
+
+  return 1 if iter == 0
+  
+  # computation of the factors
+  x = power(base, iter/2, number)
+  result = x**2 % number
+
+  # nontrivial square root check
+  if (result == 1 and x != 1 and x != number - 1)
+    is_probably_prime = false 
+  
+  # result computation: notice how variable "result" is recomputed
+  result = (base * result) % number if iter % 2 == 1
+
+  return result
+end
+
+def MR_primality_test(n)
+  base = Random.new.rand(2..(n - 1))
+
+  res = power(base, n - 1, n)
+  
+  is_probably_prime = true
+
+  return false if res != 1 or !is_probably_prime
+  true
+end
+					\end{lstlisting}
+
+	
+	\section{Sorting Lower Bounds and Linear Sorting Algorithms}
+		\subsection{Comparison Sorts and Lower Bounds}
+			Comparison sort algorithms are algorithms that swaps elements of an ordered collection comparing them one another, to eventually order it. We could see this as a continuous exploration of the "permutations space" of the original collection, until we find the right one. Being a systematic procedure, sorting can be represented as a \textbf{decision tree traverse} procedure. This procedure is useful to calculate the theoretical lower bound in complexity for the comparison sort algorithms.\\
+			If we build a decision tree where every node corresponds to a comparison of our sorting algorithm, and every leaf a permutation of the initial collection, we end up with a representation of all the decisions/comparison that the algorithm should face until it can reach the solution, and the height of that tree would be the worst case running time (each path from the root to a leaf represents an algorithm run). Since the tree must contain more than $n!$ leaves, we have that our decision tree\footnote{that's a BINARY tree} has $2^h \geq n!$ leaves, where \emph{h} is the height of the tree. Concisely, a lower bound in the height of the tree corresponds to a lower bound in the number of comparinsons needed to sort an array. This leads to the equality
+			\begin{equation}
+				h = \Omega(n \cdot \log (n))
+			\end{equation}
+			Coming from
+			\begin{equation}
+				n! \leq 2^{height} \,\Rightarrow\, height \geq \log(n!) \,\Rightarrow\, \underbrace{height \geq \log((\frac{n}{e})^n)}_{Stirling's formula} \,\Rightarrow\, \Omega(n \cdot \log(n))
+			\end{equation}
+
+		\subsection{Linear Time Sorting}
+			The counting sort and the radix sort are two algorithms that sort collections in linear time. How is this possible? They do not rely on \textit{comparisons} and they make strong assumptions on input types.
+
+			\paragraph{Counting Sort}
+				Counting sort is an \textit{array}-sorting algorithm that deals with \textit{small positive integer numbers}. "Small" in the sense that there should be an upper bound to them. The algorithm uses an auxiliary array where it accumulate the occurences of every element of the original one (populating the cells of the aux. array by using the original integers as indexes). When the first traversal is completed, we start from the bottom of the sorting array and we confront the value of the element with the value in the aux element associated to it (so that uses that value as index). We put that value at the index pointed, and we decrease the counter (in the second array). At the end of the second traversal, we've sorted the array. $O(n + k)$ complexity, where \emph{k} is the highest integer number in the array.\\
+				Possible ruby implementation (pay attention to the 4-loops construction of the algorithm):
+				\begin{lstlisting}[language=Ruby]
+def counting_sort(arr)
+  auxiliary = Array.new (arr.max + 1)
+  output = Array.new arr.length
+
+  # set structures to zero
+  auxiliary.map! { |x| x = 0}
+  output.map! { |x| x = 0 }
+
+  # record positions
+  arr.each do |i|
+    auxiliary[i] += 1
+  end
+
+  # accumulate
+  i = 0
+  while i < auxiliary.length - 1
+    auxiliary[i + 1] += auxiliary[i]
+    i += 1
+  end
+
+  # reconstruct array
+  i = arr.length - 1
+  while i >= 0
+    output[
+      auxiliary[
+        arr[i]
+      ]
+    ] = arr[i]
+    auxiliary[arr[i]] -= 1
+    i -= 1
+  end
+
+  return output
+end
+				\end{lstlisting}
+
+			\paragraph{Radix Sort}
+				Radix sort exploits digit-by-digit sort, using counting sort to sort the digits. The original implementation sorts starting from the most significative digit, but the latter on (the right one) sorts starting from the least significant digit. The application is quite straightforward: counting sort is applied \textit{to the whole number} but considering \textit{only the least significant digit not yet analyzed} for the sortings. The stability of the counting sort (property to preserve relative order between equal numbers) ensures that the final array is sorted.
+
+
+	\section{Advanced Data Structures}
+		\subsection{Disjoint Sets}
+			Disjoints set are a \textit{collection of collections} where all the subcollections are \textit{disjoint} (no element is in more than one set) and each subset is represented from an element of that set. Usually the choice of the representative element is not crucial to the functioning of the structure.
+
+			\subsubsection{Operations on a Disjoint Set}
+				Disjoint sets must be capable of performing these operations:
+				\begin{enumerate}
+					\item \verb|MAKE-SET(x)| the basic wrapper, that puts "x" into a set. Naturally, "x" should not be in another set.
+					\item \verb|UNION(x, y)| performs the set union of the two sets that constains \emph{x} and \emph{y}, $S_x$ and $S_y$. This operation removes $S_x$ and $S_y$ from the structure (their elements would be duplicated) and merges the two sets into a new one. A representative is either chosen a priori or recomputed.
+					\item \verb|FIND-SET(x)| returns a reference to $S_x$.
+				\end{enumerate}
+
+			\subsubsection{Implementation: Linked List}
+				A super easy way to implement disjoint sets is through linked lists, where each list represents a subset. The structure for each set holds a pointer to the head and one to the tail of the list, to facilitate operations (as \verb|UNION|).
+				\begin{figure}[H]
+					\centering
+					\includegraphics[width = \textwidth]{images/union.png}
+					\caption{A union performed on a disjoint set implemented through linked lists}
+				\end{figure}
+				The union operation takes $\Theta(n^2)$. Can we do better?
+
+			\subsubsection{Implementation: Forest}
+				Instead of using linked lists to represent the sets, use instead a tree (also not binary) that has the set-representative in the root element. A disjoint set will then be a forest, where each tree is a set. This time the \verb|FIND-SET| operation takes $O(\log(\text{element of the subset}))$ and the \verb|UNION| is straightforward: just "append" a tree to the other's root, $O(1)$
+				\begin{figure}[H]
+					\centering
+					\includegraphics[width = \textwidth]{images/forestUnion.png}
+				\end{figure}
+				I've spent a week on this DisjointSet class in Ruby, using no optimizations. So, here it is:
+				\begin{lstlisting}[language=Ruby]
+class DisjointSet
+  attr_accessor :sets # forest for sets
+
+  def initialize
+    @sets = Array.new
+  end
+
+  def make_set(element)
+    if (sets.filter { |i| i.has(element)}).length == 0
+      @sets.push(Tree.new(element))
+    end
+  end
+
+  def find_set(element)
+    i = 0
+    while i < sets.length
+      return sets[i]  if sets[i].has(element)
+      i = i + 1
+    end
+    return nil
+  end
+
+  def set_insert(representative, element)
+    i = 0
+    while i < sets.length
+      if sets[i].root.value == representative
+         @sets[i].insert(element)
+         break
+      end
+      i = i + 1
+    end
+  end
+
+  # unite the two sets corresponding to the elemenents
+  def union(element1, element2)
+    set1 = find_set(element1)
+    set2 = find_set(element2)
+
+    return nil if set1.nil? or set2.nil?
+
+    set1.insert_node(set2)
+
+    sets.delete(set2)
+  end
+
+  def show
+    for i in sets
+      print "->"
+      i.show
+    end
+  end
+end
+				\end{lstlisting}
+				This implementation can be furtherly optimized, using ranking and path compression:
+				\begin{itemize}
+					\item Union by \underline{ranking}: when uniting trees, always look at the rank of the tree itself (that's the height of the tree) and attach the "smaller" to the "greater"
+					\item \underline{Path compression}: contextually a \verb|FIND-SET| operation, make all the subtrees' root point directly to the representative (reducing total tree height)
+				\end{itemize}
+				applying both these optimizations (that are merely \textit{heuristics}) we can achieve a worst case running time of $O(m \cdot \alpha(n))$, where $\alpha(n)$ is the inverse Ackermann function (approximable to 4 for most practical application): in most of use cases, it's a linear time running time in the worst case\footnote{and that's cool}.
+		
+		\subsection{Random Data Structures}
+			\paragraph{Dictionaries}
+				A dictionary is a close parent of an hash map, where the values are stored associated to a unique key. Classic example, th DB table with a unique key for each entry. We're introducing fastly dictionaries (and the interface to them: \verb|SEARCH(x)|, \verb|INSERT(x)|, \verb|DELETE(x)|, pretty self explicative. This interface expands can be expanded with union-like and split-like operations.) in order to analyze \textit{random data structures}, strucutres that randomly manage their internal structure. Actually, Skip Lists and Random Treaps are \textit{implementations of dictionaries}. %% further: splay trees, AVL trees
+			
+			\subsubsection{Random Treaps}
+				Treaps are binary random trees, \textit{that do not use additional data}, simple to implement and with a limited number of rotations needed per operation (on average).\\
+				In a treap, each node contains a element \emph{x} with its random priority \emph{prio(x)}. They're organized as a binary search tree using the keys, but they also follow a heap-like property: all childs have a priority that's less than their parent priority. An interesting property of treaps is their uniqueness: give elements $x_i$ with $i \in 1..n$ and their priorities, they're represented by a unique treap representing this data\footnote{Proven by induction.}.
+
+				\paragraph{Treaps: Heaps + Trees}
+					Formally, a treap is a binary search tree where both the tree property and the heap property hold:
+					\begin{itemize}
+						\item for each node, right children have a value higher than the node
+						\item for each node, the priority of the node is always higher than the children's one
+					\end{itemize}
+					As it's clear, each node contains two values: an actual "value" that is stored inside the structure, and a "priority score" that ensures that the heap property is maintained.
+					\begin{figure}[H]
+						\centering
+						\includegraphics[width = \textwidth]{./images/treap1.png}
+					\end{figure}
+					Here's a little implementation of Treaps written in Ruby
+					\begin{lstlisting}[language = Ruby]
+class Treap
+  attr_accessor :root
+
+  def initialize(root_node)
+    if root_node.is_a? TreapNode
+      @root = root_node
+    else
+      throw "Not a valid node"
+    end
+  end
+
+  # insert a value in the treap:
+  # tree-insert + heap-property-restore
+  def insert(value, priority)
+    newNode = tree_insert(value, priority, root)
+    heap_restore(newNode)
+  end
+
+  private # --------------------------------------------
+ 
+  # binary search tree insert operation
+  # right values higher
+  def tree_insert(value, priority, node)
+    if value > node.value
+      if node.right.nil?
+        node.right = TreapNode.new(value, priority)
+        node.right.father = node
+        return node.right
+      else 
+        tree_insert(value, priority, node.right)
+      end
+    else
+      if node.left.nil?
+        node.left = TreapNode.new(value, priority)
+        node.left.father = node
+        return node.left
+      else
+        tree_insert(value, priority, node.left)
+      end
+    end
+  end
+
+  # heap property restoring subroutine
+  def heap_restore(leaf)
+    if leaf != root and leaf.priority > leaf.father.priority   
+      # need to rotate the tree
+      if leaf == leaf.father.left
+        rotate_right(leaf)
+      else
+        rotate_left(leaf)
+      end
+
+      heap_restore(leaf.father)
+    end
+  end
+ end
+					\end{lstlisting}
+				
+			\subsubsection{Skip Lists}
+				Skip lists are sequential data structures (like an ordered array) that can on average maintain $O(\log(n))$ complexity for most operations. The idea is pretty simple: we add an \textit{additional pointer} to some nodes that makes you "skip" portions of the structure when followed.
+				\begin{figure}[H]
+					\centering
+					\includegraphics[width = \textwidth]{images/skipList.png}
+				\end{figure}
+				This creates an "overlay list" where some passages make you skip entire portions of the list, saving some accesses. The \verb|SEARCH(x)| operation starts in the fast line, then "descends" in the lower line when we're close to the \emph{x} element.\\
+				The ideal skip list has half the elements per line wrt the lower line, alla evenly spaced: obviously managing such a structure during a \verb|INSERT| operation is a mess, so we can randomize something in order to statistically improve the performance of this structure:
+
+				\paragraph{Random Skip List}
+					On an insert in the bottom level, we \textit{upgrade} the element also to the upper level with a 50\% probability, and again for upper level with 50\% probability and so on; this makes 25\% the probability to be raised to the second level, 12,5\% to the third etc.\\
+					This implementation of skip lists gives us a $O(\log(n))$ search complexity \underline{for all search} with high probability.
+
+	\clearpage
+	\part{Parallel Programming}
+	\section{Machines and Models}
+		We need a model for our machine in order to design our algorithm in a complete and coherent way, wrt the architecture they will be run on. The most used one is the RAM, or Random Access Machine
+
+		\paragraph{Random Access Machine}
+			A RAM is characterized by:
+			\begin{enumerate}
+				\item unbounded number of local cells
+				\item unbounded cell dimension
+				\item an instructions set
+				\item all operation are executed in the same time
+			\end{enumerate}
+			These properties of the RAM define the time complexity as the number of intructions executed and the space complexity as the number of memory cells used (for an algorithm, of course).
+
+		\subsection{Parallel Random Access Machine}
+			The pretty straightforward extension to embed parallelism into a RAM is to multiply the total number of processors in it. To be more general possible, we identify each processor as a single RAM, and we add a number of input and output cells, alongside a \textit{shared memory bank of cells}.\\
+			Formally, a PRAM is an \underline{unbounded collection of RAM processors}, with shared memory cells. Given that each operation (read from input, write on output read or write in memory) is done \underline{simultaneously} by all processors, we have to account for shared memory conflicts. The models of PRAM to avoid conflicts are:
+			\begin{itemize}
+				\item \textbf{Exclusive read}: all processors can read simoultaneously from \underline{distinct} memory location
+				\item \textbf{Exclusive write}: all processors can write simoultaneously to \underline{distinct} memory location
+				\item \textbf{Cuncurrent read}: all processors can read simoultaneously from \underline{all} memory location
+				\item \textbf{Cuncurrent write}: all processors can write simoultaneously to \underline{all} memory location; which value "wins the race"? Priority methods can be adopted, or allowing cuncurrent writes only if the value is the same from all processors...
+			\end{itemize}
+			The PRAM is to parallel algorithms what the RAM is to simple algorithms: a natural abstraction of a machine that allows equal performance evaluation in a simple manner.
+
+		\subsection{Extension of Complexity to PRAM}
+			We'll extend the basic definitions to the parallel world:
+			\begin{itemize}
+				\item $T^*(n)$ complexity for a \underline{sequential} algorithm on a single processor
+				\item $T_p(n)$ complexity on \emph{p} processors
+				\item $SU_p(n) = \frac{T^*(n)}{T_p(n)}$ speedup
+				\item $E_p(n) = \frac{T_1(n)}{pT_p(n)}$ efficency: work on 1 over work that can be carried out on \emph{p}
+				\item $T_{\infty}$ shortest run time
+				\item Cost: $P(n)\, \times\, T(n)$ 
+			\end{itemize}
+
+			\subsubsection{Matrix Vector Multiplication}
+				Classic $Ax = b$ problem of multiplying matrix \emph{A} with vector \emph{x}. The problem is parallel \textit{per se}: every element in the result vector is calculated indipendently from the others. We split the computations following this concept: every processor will have to read a line of matrix \emph{A} and all vector \emph{b} and compute the polynomial value for the result.\\
+				Performance evaluation:
+				\begin{itemize}
+					\item $T_1(N^2) = O(N^2)$
+					\item $T_p(N^2) = O(\frac{N^2}{p})$ linear speedup
+					\item $E_p = \frac{n^2}{p\, \times\, \frac{n^2}{p}} = 1$ perfect efficency
+				\end{itemize}
+
+			\subsubsection{Matrix Matrix Multiplication}
+				Conceptually, just an extension of the previous problem to support matrix per matrix. If \emph{n} is the lenght of the matrix (suppose squared) we need $n^3$ processors\footnote{\emph{n} processors for the sum, $n^2$ total sums}. The idea is that each processor calculates the single element of the resulting matrix, so reading a row and a column of the two factors.\\
+				The algorithm:
+				\begin{enumerate}
+					\item Read row of \emph{A} and coloumn of \emph{B} $\rightarrow$ cuncurrent read
+					\item multiply elements and sum all together (using \emph{n} processors for \emph{n} elements $\rightarrow$ logarithmic cost for the sum)
+					\item store values $\rightarrow$ exclusive write
+				\end{enumerate}
+				Performance:
+				\begin{itemize}
+					\item $T_1=n^3$
+					\item $T_{p = n^3} = \log n$ the reduced complexity to $\log n$ is due to the possibility to use \emph{n} processors to reduce the complexity of a sum to the logarithm of its size
+					\item $SU = \frac{n^3}{\log n}$
+					\item $E_{n^3} = \frac{1}{\log n}$
+				\end{itemize}
+				graph of the performance indexes wrt the number of processors:
+				\begin{figure}[H]
+					\centering
+					\includegraphics[width = \textwidth]{./images/perf1.png}
+				\end{figure}
+
+	\section{Amdahl's Law and Gustafson's Law}
+		Amdahl's law is a mathematical formulation for calculating the speedup induced by the introduction of parallelism (multiple processors). The code is divided in \textit{serial} and \textit{parallelizable} segmentsand the speedup is calculated as
+		\begin{equation}
+			\begin{cases}
+				f \text{ the lenght of the parallelizable part}\\
+				1-f \text{ lenght of the serial part}\\
+				P \text{ number of processors}\\
+				SU(P, f)\, =\, \frac{T_1}{T_1*(1-f)+\frac{T_1*f}{P}}\, =\, \frac{1}{1-f+\frac{f}{P}}
+			\end{cases}
+		\end{equation}
+		The formula is easily visualizable from
+		\begin{figure}[H]
+			\centering
+			\includegraphics[width = \textwidth]{./images/Amdahl1.png}
+		\end{figure}
+		where the lenght of the blue part if \emph{f}.\\
+		This formulation can be used to calculate the speedup upper limit wrt to the number of processors:
+		\begin{equation}
+			\lim_{P \rightarrow \infty} SU(P, f)\, =\, \frac{1}{1-f}
+		\end{equation}
+		This limit is "pessimistic": for 90\% parallelizable problems, Amdahl's law suggests to use no more than 10 processors. Gustafson's formulation "inverted" the reasoning, claiming that the parallelizable part could (more likely) not be of "fixed" lenght, while this is more likely to happen for the serial one. Se he proposed the formula
+		\begin{equation}
+			SU\, =\, \frac{s + P\cdot(1-s)}{s + (1-s)}\, =\, s + P\cdot(1 - s)
+		\end{equation}
+		where \emph{s} represents the lenght of the serial part.
+
+	\section{Parallel Algorithms Design and Guidelines}
+		Most problems have a parallel solution. Given this, designing a parallel algorithm that solves a problem is not easy task. We differenciate between
+		\begin{enumerate}
+			\item Parallel algorithms: the actual algorithm that solves the problem
+	 		\item Parallel programs: the target specific implementation of a parallel algorithmm
+		\end{enumerate}
+
+		\subsection{PCAM Design Methodology}
+			PCAM is the acronym for
+			\begin{enumerate}
+				\item \textbf{Partitioning}: task and data decomposition. The extremization of the "divide" part of the "divide and conquer" approach: the goal of this stage is to identify a large number of subtasks that will be executed in parallel. We take into consideration both the data and the functions:
+					\begin{enumerate}
+						\item Domain decomposition: the data associated to a problem is decomposed (an image into singular color layers, for example) and then the tasks working on separate data are parallelized
+						\item Functional decomposition: the tasks are separated discriminating on the function they carry out, rather than the data they use. The perfect example is the model of an ecosystem: it's easier to model it by separating entities into "plants, carnivores, herbivores" etc ranther then splitting the data domain (that's also very difficult, in this case). Pipelining is a kind of functional decomposition approach.
+					\end{enumerate}
+					When partitioning, it's important to define "a lot"\footnote{a order of magnitude more than the processor count.} of evenly sized tasks\footnote{in order to fully exploit the parallelization}.
+				\item \textbf{Communication}: task execution coordination. Tasks need to coordinate in order to achieve the computation target. The communication can be categorized with various metrics: local or global, structured or unstructured (regarding the \textit{internal organization among peers}), static ot dynamic (if the peers pool is \textit{already defined or can be discovered}), explicit or implicit (message passing or shared memory), synchronous or asynchronous, point to point or collective.
+				\item \textbf{Agglomeration}: evaluation of the structure. Clustering together tasks and combining them into larger ones is an intermediate "reduce" step. This reduces overhead because it reduces \textit{communication} and avoids a lot of \textit{data replication}. The agglomeration step is performed when we want (for example) to better exploit the locality of computation or data.
+				\item \textbf{Mapping}: resource assignement. At this point, we have decomposed all the tasks, designed the communication between them, clustered some tasks. We end up with a some sort of task graph and we can start to allocate tasks to resources. Distributing tasks on a system of resource is an NP-complete problem, due to the dependency to the communication systems, the single node computational power and the single task complexity.
+			\end{enumerate}
+			PCAM is \underline{not} a sequential process: we may have agglomeration based on possible mappings or communication designed before partitioning.
+
+			\paragraph{Parallel Problems are Complex}
+				The main steps when writing a parallel program are 
+				\begin{enumerate}
+					\item Analyze the data dependencies of the problem to identify \textit{possible} parallelizations
+					\item Identify hotspots, so points where most of the work is actually done. Not parallelizing hotspots can lead to bottlenecks
+					\item Estimate performance against sequential solutions
+					\item Repeat from 1)
+				\end{enumerate}
+				most of the parallelism is identified by hand, a few tools can design a tasks graph or a node network automatically.
+
+
+
+
+\end{document}
+
