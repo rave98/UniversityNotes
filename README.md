@@ -34,7 +34,7 @@ understanding a subject.
 
 ## What does this repo contain?
 
-I'll list here all the courses I've attended during my master course in
+I'll list here all the courses I've attended during my master degree in
 Computer Science and Engineering at Politecnico di Milano, and of which
 are present my notes:
 - [x] Data Base 2
@@ -48,6 +48,9 @@ are present my notes:
 - [x] Computing Infrastructures
 - [x] Formal Methods for Cuncurrent and Real Time Systems
 - [x] Computer Security
+- [x] Advanced Algorithms and Parallel Programming (WIP)
+- [x] Data Management for the Web (WIP)
+- [x] Computer Ethics (WIP)
 
 ## What should I do with this repo?
 
