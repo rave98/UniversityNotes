@@ -4,6 +4,8 @@
 \usepackage{float}
 \usepackage{graphicx}
 \usepackage{amsmath}
+\usepackage{caption}
+\usepackage{subcaption}
 
 \usepackage[dvipsnames]{xcolor}
 \usepackage{listings}
@@ -676,7 +678,7 @@ class Treap
 						\item Functional decomposition: the tasks are separated discriminating on the function they carry out, rather than the data they use. The perfect example is the model of an ecosystem: it's easier to model it by separating entities into "plants, carnivores, herbivores" etc ranther then splitting the data domain (that's also very difficult, in this case). Pipelining is a kind of functional decomposition approach.
 					\end{enumerate}
 					When partitioning, it's important to define "a lot"\footnote{a order of magnitude more than the processor count.} of evenly sized tasks\footnote{in order to fully exploit the parallelization}.
-				\item \textbf{Communication}: task execution coordination. Tasks need to coordinate in order to achieve the computation target. The communication can be categorized with various metrics: local or global, structured or unstructured (regarding the \textit{internal organization among peers}), static ot dynamic (if the peers pool is \textit{already defined or can be discovered}), explicit or implicit (message passing or shared memory), synchronous or asynchronous, point to point or collective.
+				\item \textbf{Communication}: task execution coordination. Tasks need to coordinate in order to achieve the computation target. The communication can be categorized with various metrics: local or global, structured or unstructured (regarding the \textit{internal organization among peers}), static ot dynamic (if the peers pool is \textit{already defined or can be discovered}), explicit or implicit (message passing or shared memory), synchronous or asynchronous, point to point or collective.\\The communication design is one of the most critical when it comes to parallel programs: it can introduce a lot of overhead (transmission and synchronization) that can even nullify the parallelization benefits. The designer should try to minimize the number of channels and try to parallelize also computation and communication.
 				\item \textbf{Agglomeration}: evaluation of the structure. Clustering together tasks and combining them into larger ones is an intermediate "reduce" step. This reduces overhead because it reduces \textit{communication} and avoids a lot of \textit{data replication}. The agglomeration step is performed when we want (for example) to better exploit the locality of computation or data.
 				\item \textbf{Mapping}: resource assignement. At this point, we have decomposed all the tasks, designed the communication between them, clustered some tasks. We end up with a some sort of task graph and we can start to allocate tasks to resources. Distributing tasks on a system of resource is an NP-complete problem, due to the dependency to the communication systems, the single node computational power and the single task complexity.
 			\end{enumerate}
@@ -691,9 +693,332 @@ class Treap
 					\item Repeat from 1)
 				\end{enumerate}
 				most of the parallelism is identified by hand, a few tools can design a tasks graph or a node network automatically.
+		
+		\subsection{Parallel Programming Patterns}
+			\paragraph{Dependencies}
+				Parallelization will always depend on the sequence of operations that are actually needed to complete a task. Those operations have \textit{dependencies} among them that constraint the order in which they're executed. We can distinguish between 3 basic dependency types:
+				\begin{itemize}
+					\item True dependency: \verb|a = 3; b = a;|
+			 		\item Output dependency: \verb|a = function(x); a = b;|
+					\item Anti dependency (pipeline problem): \verb|a = b; b = 1;|
+				\end{itemize}
+				\textbf{Two instructions can execute in parallel if and only if there are \textit{no depenencies} among them}.
+			
+			\subsubsection{Nesting Pattern}
+				This is a pseudopattern: it just represents the ability to \textit{hierarchically compose} tasks, that can be themselves arranged in patterns.
+				\begin{figure}[H]
+					\centering
+					\includegraphics[width = \textwidth]{./images/Nesting.png}
+				\end{figure}
 
+			\subsubsection{Serial Control Patterns}
+				All the serial programming "patterns"\footnote{more "constructs", in this case} are obviously available in the parallel framework: things as selection, iteration and sequence are still there.
 
+			\subsubsection{Fork Join}
+				This pattern focuses on the behaviour of single tasks. Forking a task means split it into two threads of execution, that may or may not be connected one another. They should rejoin later. This is the classic fork-join approach to processes in C. Joins are differnt from Barriers, as primitives: a Join requires all threads but one to terminate, while a barrier is just a sync point (all threads continue).
 
+			\subsubsection{Map, Reduce and Filter}
+				The classic functional operations can also be interpreted as parallel patterns; this is also caused by their "propention" to be parallelized: it's easy to see how a \verb|map| function can be spread among parallel tasks, or equally a \verb|filter| or a \verb|reduce| (this last one with the hypothesis that the operation of reduction is commutative and associative).
 
+				\paragraph{Map}
+					Very classic functional primitive: an operation is applied to all the elements of a collection; "do the same thing many times". The parallelization scope is huge: we can parallelize even the single elements being mapped. The strenght / weakness of the \verb|map| is that the operation is applied to \textit{the single elements}, so each iteration of the loop is \textit{indipendent from the others}. For this to be possible we need to put some constraints on the mapping function: it should be stateless (it should not depend from a shared state, or a state in general: it should be a \textit{pure} function). The map can be easily extended to multiple input collections.
+
+			\subsubsection{Stencil, Recurrence and Scan}
+				The stencil patterns is easily visualizable on a grid, that can be a grid of data or a grid of "adjacent threads". It can be seen as a \textit{generalized map}, where the function is not anymore applied to all the dataset (or threadset) but only to a selected subgroup of elements. Usually neighbours are identified by relative offsets. For the stencil pattern, boundary conditions of access must be considered, in order to avoid superpositions. \textbf{Scan} instead is a modification of the \verb|reduce| operation: a \verb|scan| applied to a collection also gives as output all the intermediate results. A parallelized scan usually needs more operations than a serial one, due to the dependencies among loop iterations.
+				\begin{figure}[H]
+					\centering
+					\begin{subfigure}{0.5\textwidth}
+						\centering
+						\includegraphics[width = 0.4\linewidth]{./images/Stencil.png}
+					\end{subfigure}%
+					\begin{subfigure}{0.5\textwidth}
+						\centering
+						\includegraphics[width = 0.4\linewidth]{./images/Scan.png}
+					\end{subfigure}
+					\caption{Stencil and Scan operation}
+				\end{figure}
+				The recurrence operation instead is a complex version of the \verb|map|, where single elements can be passed through the mapping function \textit{alongside adjacent ones}. For a recurrence to be computable, there \textit{must} be a serial ordering of the recurrence elements. A recurrence can also be seen as a stencil where neighbours are accessed \textit{both as inputs and outputs}: a one-dimensional recurrence is a \verb|scan|, in fact.
+
+				\paragraph{Stencil}
+					Stencil is, as said, a supermap operation that keeps into account neighbouring data when computing a function on a dataset. So for example, viewing an image as a matrix of pixels, a "smoothing" function is perfectly applied through a stencil-like operation that averages color intensity around certain points.
+
+		\subsection{Parallel Data Management Patterns}
+			Parallel programs deals with data in various ways. The management of the memory varies according to how data is read, written, shared, allocated and copied.
+			\begin{enumerate}
+				\item \underline{Random read and write} policy explains itself: memory locations are managed through pointers, that represents addresses. Aliasing (superposing of memory location) can be a problem.
+				\item \underline{Stack allocation}: dynamically allocate data in a LIFO manner. In a parallelized world, each thread of execution receives his own stack; this way thread locality is preserved.
+				\item \underline{Heap allocation} is the opposite of stack allocation; again different memory section/pools are to be kept for each thread. Queue allocation strategies are also more complex and and slower to implement wrt stack ones.
+				\item \underline{Objects}: we can also manage the memories in a OO way, trying to bundle together data and data transformations. This varies significatively among parallel programming models.
+			\end{enumerate}
+			We can give also a firther characterization of parallel data management patterns:
+
+			\subsubsection{Pack}
+				Pack is the process of reducing a collection by removing the empty nodes. Usually it's implemented through a flagging procedure, that sweeps the collection to find idle/empty nodes. The remaining ones are then transferred in an other reduced structure. It does have a reverse \verb|unpack| primitive.
+
+			\subsubsection{Pipeline}
+				Intended as software pipeline, this is the classic approach to exploit a line of work in a consumer - producer fashion. Each node takes data from the previous one and passes elaborated data to the next; each node can so work in parallel with the others. The pipeline is usually linear, but DAG pipelines can be also built (maximizing parallelism).
+
+			\subsubsection{Geometric Decomposition}
+				Again in the data-as-matrix realm. We can divide our pool of data in sections (that can be overlapping also) and assign them to tasks. It's a tetris game.
+				\begin{figure}[H]					
+					\centering
+					\includegraphics[width = \textwidth]{./images/GDec.png}
+				\end{figure}
+				This pattern does not necessarily move data, it just groups together nodes.\\
+				We can classify decomposition with two criteria: if data is overlapping or not, and if pertitions are homogeneous or not. The resulting schema is\\
+				\begin{tabular}{c || c | c }
+					& Overlapping Partitions & Non overlapping partitions\\
+					\hline
+					\hline
+					Uniform partitions & \textit{decomposition} & \textit{partitioning}\\
+					Non uniform partitions & \textit{decomposition} & \textit{segmentation}					
+				\end{tabular}
+
+			\subsubsection{Gather and Scatter}
+				Gather and Scatter are two opposite patterns: they both require a data collection and a set of indices (or locations) as input and output a new reordered and filtered set, but the use of the auxiliary index collection is different; gather \textit{reads elements accessing the input collection using the index collection as a mask}, so also ordering the input collection as specified in the index (indexes can be non-unique). The scatter is the opposite: the indexes collection is used during the \verb|write operation|, instead of in the \verb|read| one.
+				\begin{lstlisting}[language = c]
+void scatter(int *input, int *indexes, int *output){
+	for(int i = 0; i < BUFFERSIZE; i++)
+		*(output + *(indexes + i)) = *(input + i);
+}
+
+void gather(int *input, int *indexes, int *output){
+	for(int i = 0; i < BUFFERSIZE; i++)
+		*(output + i) = *(input + *(indexes + i));
+}
+				\end{lstlisting}
+				Gather has several special cases (that are just more trivial) that can offer more parallelization possibilities. One is the \verb|shift|, the classical "move all elements of an array by n positions left or right". A parallel implementation can rely on \textit{vector intrsuctions} in order to move all data at a time\footnote{Given that the boundary elements, that need to be shifted in/out from the collections, are handled properly.}. Another particulare case is the \verb|zip| pattern, where two collections are interleaved (and so merged) into a last collection. Obviously there exists a \verb|unzip| pattern.\\
+				Scatter has a writing problem: what happens if write positions are duplicated, so if multiple value must be written in the same place? There are several solutions:
+				\begin{enumerate}
+					\item \underline{permutation scatter} that checks whether in the indxes array aren't present duplicates
+					\item \underline{atomic scatter} which non-deterministically solves conflicts (keeping operations atomicity)
+					\item \underline{priority scatter} that solves conflicts by adding a priority to each element
+					\item \underline{merge scatter} that instead solves conflict by merging together the conflicting elements (in numbers, summing them for example).
+				\end{enumerate}
+
+				\paragraph{Converting Scatter to Gather}
+					Scatter is more expensive than gather; this is true for a number of reasons: writing is generally more expensive than reading (cache may block micro-writes) and all cores should synchronize to maintain cache coherency. All the cache\footnote{and architecture} related problems can be fully avoided if we know in advance which addresses (indexes) will be used. In fact, all forms of scatters can be transformed into gathers if the indexes are known in advance.
+				
+	\section{Dynamic Programming}
+		Dynamic programming is a technique to solve problems that resembles divide and conquer: it partitions the problem into smaller subproblems then merges the results. It's applicable when two properties are verified:
+		\begin{itemize}
+			\item Optimal substructure
+			\item Overlapping subproblems
+		\end{itemize}
+
+		\paragraph{Optimal Substructure}
+			A problem is said to have an optimal substructure when an optimal solution can be built directly from the solutions of its subproblems. More in concrete, an optimal solution of the problem can be found \textit{among the optimal solutions of the subproblems}\footnote{as the branch and bound methods.}. 
+		
+		\paragraph{Overlapping Subproblems}
+			We say that a problem has overlapping subprolems if the problem can be splitted in several subproblems \textit{which are reused many times}. The classic interpretation / visualization of this property is a decision binary tree where there are "twin subtrees" - subtrees with the same identical structure and node values.\\
+			A "splitting" algorithm \textit{without} the overlapping subproblems property is a classic divide and conquer algorithm.
+
+		\paragraph{Intermediate Results Memoization}
+			A dynamic programming approach aims to avoid the \textit{recomputation} of intermediate results, the ones that come from the overlapping subproblems. Instead, these results are stored and accessed when needed (avoiding so to re-execute the entire computation.
+
+		\subsection{Longest Subsequence Example}
+			\textbf{The problem}: given two symbols ordered collections, find a longest subsequence common to them both, even not consecutive symbols. For example, collections \verb|a c a d a f a r t| and \verb|a b c| share the \verb|a c| subsequence.\\
+			\textbf{The approach}: we focus first on finding the \textit{length} of the LCS, then we extend the algorithm to find the exact sequence\footnote{we use this approach because I said so.}.\\
+			\textbf{The algorithm}: easy enough: the most basic formulation scans all the second vector elements \textit{for each element in the first one}, to compare the values. The divide and conquer recursive approach works in a similar way: we analyze the couple of elements in the current index, and if they're equal we decrease \underline{both} indexes, if not we recusively call two times the procedure (one for the index we're decrementing). The pseudocode\footnote{I hate it too, but it's the fastest way trust me} is
+			\begin{figure}[H]
+				\centering
+				\includegraphics[width = \textwidth]{./images/LCS.png}
+			\end{figure}
+			Where \verb|x, y, i, j| represents the two vectors and the two indexes, respectively. This approach is obviously similar to a DaC one; however, we can easily identify a set of problems that both recursive calls will go through:
+			\begin{figure}[H]
+				\centering
+				\includegraphics[width = \textwidth]{./images/LCStree.png}
+			\end{figure}
+			So, we should now find a way to buffer the already computed elements. Easy enough to do, we build a matrix that's $\vert x \vert \times \vert y \vert$ big, and store there the results of the computation. Prior to evaluate a certain intermediate result, we check the matrix for it. Memoized version of the algorithm:
+			\begin{figure}[H]
+				\centering
+				\includegraphics[width = \textwidth]{./images/MLCS.png}
+			\end{figure}
+	
+	\section{Amortized Analysis}
+		Amortized analysis is a technique used to compute the time needed to perform a certain set of operations; it averages the time required to do an operation over all the operations performed. The goal is to show that an operation is small when compared to the whole set of operations, even though a single operation can be expensive.\\
+		\textbf{Amortized analysis is not average-case analysis}: probability is not involved here, and this method \textit{guarantees the average performance of each operation} in the worst case. It's an alternative to worst-case analysis to compute the running time of an algorithm.
+
+		\paragraph{Aggregate analysis}
+			We analyze the problem of adjusting the size of an hash table in order to keep it as small as possible \textit{and} not having overflow lists. The first idea is to reallocate the whole table whenever an overflow is detected, with the total space doubled. This way, the insertion of a single element will have constant complexity unless exactly $2^n-1$ elements have been inserted, in that case the cost will be equal to $2^n$ (n being the size of the table).\\
+			If we analyze the complexity in the classic worst-case approach, we see that since a single insertion can cause the re-insertion of all the previous elements (due to the reallocating in case of overflow) the overall complexity is $\Theta(n^2)$.
+			\begin{figure}[H]
+				\centering
+				\includegraphics[width = \textwidth]{images/amortized1.png}
+			\end{figure}
+			\begin{figure}[H]
+				\centering
+				\includegraphics[width = \textwidth]{images/amortized2.png}
+			\end{figure}
+			Where \emph{i} is the element inserted, $c_i$ the overall cost of inserting the element and $size_i$ the current size of the table.\\
+			The cost for n insertions then become:
+			\begin{equation}
+				\sum_{i=1}^{n}(c_i)\, \leq\, n\, +\, \sum_{j=0}^{\lfloor \log(n-1) \rfloor}(2^j)\, \leq\, \underbrace{3n}_{2^{\log(n)}\, \approx\, n}\, =\, \Theta(n)
+			\end{equation}
+
+		\subsection{Accounting method}
+			The accounting method aims to be more precise of the aggregate one, by using helper values and variables in the analysis.\\
+			We associate to every operation a fictitious cost $\hat{c}$ and we then compute the total complexity with that cost. Any amount not consumed is accumulated in a "bank"; out goal is to have in the "bank" a non negative value, so we can be sure to have provided an upper bound to the complexity of the algorithm.\\
+			For the hash table dynamic size problem, we can set a cost of 3 for each operation:
+			\begin{itemize}
+				\item 1 is the cost of the insertion
+				\item 2 is the cost of doubling the size
+			\end{itemize}
+			So if we analyze the sequential insertion of elements in the hash, as we've done before, we increment our "bank" value each step by the difference of the amortized cost and the real one:
+			\begin{figure}[H]
+				\centering
+				\includegraphics[width = \textwidth]{images/accounting1.png}
+				\caption{We can see how the "bank" value never goes negative, so the sum of the amortized costs provides an upper bound on the sum of true cost}
+			\end{figure}
+
+		\subsection{Potential method}
+			As the accounting method, the potential one accumulates cost "on the go" and tries to compute the cost by expressing it as a recursive formula (a-la dynamic programming).\\
+			In detail: we have our $D$ data structure, and operation $i$ transforms $D_{i - 1}$ to $D_i$ at cots $c_i$. We also need a potential function defined as
+			\begin{equation}
+				f:\, \{D_i\}\, \rightarrow\, R^+
+			\end{equation}
+			That assigns at each state a non negative real number for each step. We can now define the amortized cost at step \emph{i} as
+			\begin{equation}
+				\hat{c}_i \,=\, c_i + \underbrace{f(D_i) - f(D_{i-1})}_{\text{potential difference}\, \Delta f}
+			\end{equation}
+			The reasoning is pretty much the same as in the accounting approach: if the $\Delta f$ is positive at step $i$, then cost is being accummulated in the data structure; otherwise, the cost accumulated is being used to compensate a very expensive operation. If we put all together
+			\begin{equation}
+				\sum_{i = 1}^n\hat{c}_i \,=\, \sum_{i = 1}^n(c_i + f(D_i) - f(D_{i - 1})) \,=\, \underbrace{\sum_{i = 1}^nc_i + f(D_n) - f(D_0)}_{\text{the series telescopes}}
+			\end{equation}
+			So the total amortized cost is bigger than the sum of all standard costs, because the cost of the final state is greater than zero but $f(D_0) = 0$\footnote{property of $f(x)$}
+	
+	\section{Competitive Analysis}
+		Competitive analysis is a method that aims to provide a measure of the complexity of an \textit{online algorithm} by comparing it the equivalent \textit{offline version}. This is usually done when probabilistic estimations on the input are not available (so most of the cases).\\
+		The comparison is done looking at the worst case complexity if the online algorithm we're analyzing versus the worst case complexity of the best offline algorithm available, also called God's algorithm (differently from the online one, n fact, it knows all future inputs that will come). An algorithm is said to be alpha competitive is it's only linearly more complex (additive constants exluded) wrt the optimal offline version, or more formally
+		\begin{equation}
+			C_{online}(S) \,\leq\, \alpha \cdot C_{offline optimal}(S) + k
+		\end{equation}
+		where $S$ represents the sequence of operations taken into consideration.
+
+		\paragraph{Self Organizing Lists}
+			Say we wanto to implement a linked list, and we want to make so that the implementation can adapt to the requests in order to speedup the accessing of elements. This will not change the worst case complexity (it will remain $O(n)$ of course) but could significatively improve the average seek time. We have to introduce heuristics to do so:
+			\begin{itemize}
+				\item \textbf{Move to front}: this heuristic simply takes the accessed element and moves it at the first place of the list. Since moving an item of n positions (that we will call \textit{rank}) costs n, we have that the total cost of finding + reordering is
+					\begin{equation}
+						c \,=\, 2 \,\cdot\, rank(x)
+					\end{equation}
+					where $x$ is the accessed element. This heuristic is $\alpha$ competitive for self organizing lists, more precisely 4-competitive. Let's try to prove it:\\
+					We use as potential function
+					\begin{equation}
+						\Phi(L_i) \,=\, 2 \,\cdot\, \text{number of inversions}
+					\end{equation}
+					where the number of inversions is formally defined as a function on couples
+					\begin{equation}
+						\text{number of inversions} \,=\, |(x, y) \,:\, x \prec_{L_i} y \,\wedge\, y \prec_{L_i^*} x |
+					\end{equation}
+					where $\prec_{List}$ stands for "precedes in list $List$". An access to an element brings it to the front, so moving all preceding elements before him a "step forward", causing the destruction / creation of some other inversions REMEMBER: WITH INVERSIONS WE ARE COMPARING IT TO THE OPTIMAL LIST WITH THE OPTIMAL ALGORITHM.\\
+					To prove the $\alpha$-competitivity, we consider each element of lists $L$ and $L^*$ which are respectively the one with the online MTF algorithm and the offline optimal. We can categorize each element of the lists basing ourselves on the inversions it is part of, wrt a $x$ element tha would be the searched one:
+					\begin{itemize}
+						\item precedes $x$ in both lists
+						\item precedes $x$ in $L$ and follows $x$ in $L^*$
+						\item follows $x$ in $L$ but precedes $x$ in $L^*$
+						\item precedes $x$ in both lists
+					\end{itemize}
+					more formally:
+					\begin{figure}[H]
+						\centering
+						\includegraphics[width = \textwidth]{./images/MTF1.png}
+					\end{figure}
+					So MTF moves $x$ to the front we have two costs defined for each list as:
+					\begin{equation}
+						\begin{cases}
+							r = |A| \,+\, |B| + 1 = \text{rank}_{L_{i - 1}}(x)\\
+							r^* = |A| \,+\, |C| + 1 = \text{rank}_{L_{i - 1}^*}(x)
+						\end{cases}
+					\end{equation}
+					so, we have
+					\begin{equation}
+						\Phi(L_i) - \Phi(L_{i-1}) \leq 2 \,\cdot\, (|A| - |B| + t_i)
+					\end{equation}
+					where $t_i$ is the number of transposes $x$ has undergone in $L^*$. If we make the amortized cost calculation now:
+					\begin{align}
+						\hat{c}_i = c_i + \Phi(L_i) - \Phi(L_{i - 1})\\
+						\leq 2r + 2(|A| - |B| + t_i)\\
+						= 2r + 2(|A| - (r - 1 -|A|) + t_i)\\
+						= 4|A| + 2 + 2t_i \leq 4(r^* + t_i) = 4c_i^*
+					\end{align}
+					So obtaining that the amortized cost is linearly dependent from the optimal cost.
+				\item \textbf{Count method}: alongside each element store a count of the times it has been accessed and keep the list reversely ordinated according to that count
+				\item \textbf{Transpose/bubble method}: each time a node is accessed, it's swapped with the preceding node
+			\end{itemize}
+
+	
+	\clearpage
+	\section{Implementations}
+		\subsection{Posix PThreads}
+			Posix threads are an implementations of a shared memory parallel programming model based on threads. In UNIX systems, a thread is a "subprocess" in the sense that is a process' son, but it's indipendent from the process execution or the execution of other "brothers" threads. Multi threading software architecture are thus lighter than just multi process ones, because threads, when spawned, needs to duplicate the bare minimum amount of data; in fact, they share most of the father process information.\\
+			PThreads makes use of \textit{explicit synchronization} through primitives and \textit{implicit communication} through shared variables, usually accessed through pointers. This model of communication is prone to \textit{data race conditions}, where more threads competes for a resource access (the accesses are cuncurrent).
+
+			\subsubsection{Synchronization Primitives}
+				The PTrhead standard has several synchronization primitives to use:
+				\begin{itemize}
+					\item \verb|join|: a thread calling \verb|join| \textit{stops and waits for all his sons to complete}. A thread, if joinable, can become \textbf{detached} so doea not have a father thread.
+					\item \verb|barrier|: a barries is like a \verb|join| but the threads do not terminate on the synch. It's just a "numbered checkpoint" that aligns all the threads executions. Super useful when defining software pipelines.
+					\item \verb|mutex|: not exactly a synchronization primitive \textit{per se}, as it's used only to access shared resources.
+					\item condition variables: created through the \verb|pthread_cond_wait| primitive, they're just enhanced mutexes. They allow threads to synchronize explicitly. They avoid polling continously the mutex to see if it's locked.
+				\end{itemize}
+
+				\paragraph{Barriers Join Example}
+					As a first "Hello World" example, we're trying to have two threads snchronize to print a message in a serial way. Notice how the barrier is used, and how the main thread has to wait for the last to terminate. Why this? Because if not, it can happen that the main thread terminates before his sons, having them to abrutly end mid-execution.
+					\begin{lstlisting}[language = c]
+#include <pthread.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct {
+   int index;
+   pthread_barrier_t *sync;
+} thread_param_t;
+
+pthread_barrier_t barrier;
+
+void * thread_body(void *param){
+   int local_index = ((thread_param_t *)param)->index;
+   if(local_index == 1){
+      printf("  Thread 1 speaking: FIRST\n");
+      pthread_barrier_wait(((thread_param_t *)param)->sync);
+   } else {
+      pthread_barrier_wait(((thread_param_t *)param)->sync);
+      printf("  Thread 2 speaking: LANDING\n");
+   }
+}
+
+int main(int argc, char * argv){
+   // sync barrier init
+   pthread_barrier_init(&barrier, NULL, 2);
+
+   thread_param_t *pt1 = malloc(sizeof(thread_param_t)),
+                  *pt2 = malloc(sizeof(thread_param_t));
+
+   pt1->index = 1;
+   pt1->sync = &barrier;
+
+   pt2->index = 2;
+   pt2->sync = &barrier;
+
+   // thread pool
+   pthread_t threads[2];
+
+   printf("Starting threads:\n");
+
+   // thread initialization
+   pthread_create(&threads[0], NULL, thread_body, (void *)pt1);
+   pthread_create(&threads[1], NULL, thread_body, (void *)pt2);
+
+   // wait for last thread to end
+   pthread_join(threads[1], NULL);
+   printf("exiting...\n");
+
+   return 0;
+}
+					\end{lstlisting}
+				
+
+				
 \end{document}
 

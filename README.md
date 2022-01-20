@@ -48,9 +48,9 @@ are present my notes:
 - [x] Computing Infrastructures
 - [x] Formal Methods for Cuncurrent and Real Time Systems
 - [x] Computer Security
-- [x] Advanced Algorithms and Parallel Programming (WIP)
-- [x] Data Management for the Web (WIP)
-- [x] Computer Ethics (WIP)
+- [x] Advanced Algorithms and Parallel Programming
+- [ ] Data Management for the Web
+- [x] Computer Ethics
 
 ## What should I do with this repo?
 
