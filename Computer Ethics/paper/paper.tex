@@ -1,0 +1,164 @@
+\documentclass{article}
+
+\usepackage[a4paper, total={15cm, 24.5cm}]{geometry}
+\usepackage{float}
+\usepackage{biblatex}
+\addbibresource{paper_bibliography.bib}
+
+%% ------------------------------------- for the title page
+\newcommand{\plogo}{\fbox{Politecnico di Milano}} % Generic dummy publisher logo
+
+\usepackage[utf8]{inputenc} % Required for inputting international characters
+\usepackage[T1]{fontenc} % Output font encoding for international characters
+\usepackage{fouriernc} % Use the New Century Schoolbook font
+%%-------------------------------------
+
+\title{Documentation: a reproducibility issue}
+\author{Elia Ravella}
+\begin{document}
+
+	\begin{titlepage} % Suppresses headers and footers on the title page
+
+		\centering % Centre everything on the title page
+	
+		\scshape % Use small caps for all text on the title page
+	
+		\vspace*{\baselineskip} % White space at the top of the page
+	
+		%------------------------------------------------
+		%	Title
+		%------------------------------------------------
+	
+		\rule{\textwidth}{1.6pt}\vspace*{-\baselineskip}\vspace*{2pt} % Thick horizontal rule
+		\rule{\textwidth}{0.4pt} % Thin horizontal rule
+	
+		\vspace{0.75\baselineskip} % Whitespace above the title
+	
+		{\LARGE Documentation:\\a reproducibility issue} % Title
+	
+		\vspace{0.75\baselineskip} % Whitespace below the title
+	
+		\rule{\textwidth}{0.4pt}\vspace*{-\baselineskip}\vspace{3.2pt} % Thin horizontal rule
+		\rule{\textwidth}{1.6pt} % Thick horizontal rule
+	
+		\vspace{2\baselineskip} % Whitespace after the title block
+	
+		%------------------------------------------------
+		%	Editor(s)
+		%------------------------------------------------
+	
+		\vspace{0.5\baselineskip} % Whitespace before the editors
+	
+		{\scshape\Large Elia Ravella} % Editor list
+	
+		\vspace{0.5\baselineskip} % Whitespace below the editor list
+	
+		\vfill % Whitespace between editor names and publisher logo
+	
+		%------------------------------------------------
+		%	Publisher
+		%------------------------------------------------
+	
+		\plogo % Publisher logo
+	
+		\vspace{0.3\baselineskip} % Whitespace under the publisher logo
+	\end{titlepage}
+
+	\tableofcontents
+	\clearpage
+
+	\section{Documentation}
+		What is documentation? "Documentation is any communicable material that is used to describe, explain or instruct regarding some attributes of an object, system or procedure, such as its parts, assembly, installation, maintenance and use"\cite{linuxdoc}. Documentation is a set of \underline{technical} documents, employed in the development of software tools; it is not to be confused with bureaucratic documentation.\\
+		Why is documentation needed, and what role does documentation play in the software development world?
+		
+		\subsection{Software documentation}
+			In the software world, especially in the software \textit{development} world, documentation is a very broad term: it includes 
+			\begin{itemize}
+				\item manuals: organized sources of information about the \textit{use} of a specific piece of technology, as a tool or a framework whole;
+				\item APIs, or Application Programming Interfaces: a collection of human readable descriptions of the behaviours of the single functions offered by a tool; these are the standard go-to documentation when a developer must understand and use a new library or language;
+				\item code comments: when a programmer needs to delve deep into the details of a technology s/he is using, s/he probably reads its source code: documentation is also there, in the form of \textit{comments on the code} which are "statements by programmers explaining their code to other programmers who may work on the same programs and to remind themselves of what they did or what remains to be done" \cite{linuxdoc}.
+			\end{itemize}
+			These documents are fundamental to the description of a technology, and so they concur to the \textit{general usability} of such technology: it is pretty straightforward that a well documented tool is far easier to work with with regard to a poorly described one.\\
+			Software documentation is the designated entry point for a software: while a mechanical tool, such as a screwdriver or a wrench, conveys its correct use easily enough through the geometry of the tool itself, the same is not valid for software tools as development frameworks, programming languages, development environments or even \textit{approaches to a problem} when talking about software; the inherent complexity of developing a software renders very difficult to just \textit{guess} how a software tool would work, or how to use it in a proper way.
+			Documentation is a corner stone in all the phases of a software development process\footnote{I will try to analyze the most generic cycle of a software development process.}:
+			\begin{itemize}
+				\item when defining requirements and analyzing the reality in which the software will operate in, documentation on the technologies used could highlight which one is the more suitable for the kind of problem the developers are facing, or which ones could not be used for, for example, compatibility issues;
+				\item when designing a software application, the chosen technology stack guides some design choices, either because of the design of the tools themselves or due to known fallacies in such tools; these "imposed design choices and guidelines" are (and \textit{must}) be specified in the documentation of the technologies used;
+				\item during the development of a software solution APIs and manuals are the main resurce a programmer utilizes to write code: since the tools to develop a software are \textit{software themselves}, a developer relies on the already present documentation to efficently write code that is correct, performing and maintainable;
+				\item the testing phase itself is a development process, in which code is used to test other code; as the development itself, it needs the documentation of framework and tools in order to be performed in an effective way;
+				\item the deployment and maintenance phases of a software are as complex as the design and development phases: they involve a lot of different technologies, ranging from hardware-related ones to networking to cloud solutions; needless to say, documentation on how to use these tools is crucial to their correct functioning and use.
+			\end{itemize}
+			It is now clear that documentation is a crucial tool in the software development process; it's arguably the most important one, even more than the "operative" ones as the IDEs or code editors themselves.
+
+		\subsection{Writing software documentation}
+			Who is in charge of writing software documentation? The answer is simple: the same people in charge of designing, developing and testing the software they are realizing. Some documentation is written \textit{inside the code} in form of comments, so it is quite obvious that it must be produced by the very same person writing the code. Not only for a locality principle but also because the knowledge which must be embedded in comments (and in documentation in general) should come from the same people who designed the software, to effectively convey the reasoning behind design choices, architectural structures and functioning schemes. We can consider software documentation a part of the final delivered product, that comes \textit{alongside} the software and is needed to instruct other people on how to use such tool.
+
+	\section{Reproducibility}
+		Reproducibility is a property unique to digital artifacts, and it can be described as the ability of being copied, distributed and moved without harming (or even modifying) the original copy. No other tangible artifact on earth has this property: it is just impossible to take something from someone without harming the owner of the object; instead, copying \textit{a piece of software} or more in general a \textit{a digital document or artifact} does not harm anyone in principle, because the code is just copied and the original owner still has an unaltered version of it. Reproducibility is a property that can be exploited in countless ways, both with good and bad intentions: a software can be distributed without physical supports, so reducing the environmental impact; a document can be passed by copy paste instead of printing, thus speeding up both the adoption of that book and all the processes that involve that book; bank account transactions can be copied, so violating the privacy of people; infinite examples are possible.
+		
+		\subsection{Reproducibility and value}
+			Reproducibility also poses a problem with the meaning of \textit{value} when it comes to certain artifacts: in a way, a reproducible artifact is a never ending resource. There is no scarcity of it so to justify a value of the single copy,\label{RaV} as it happens with every limited resource on earth. If the value of an object only came from the fact that there are a \textit{fixed number of copies} of it then reproducible items would be completely empty of value, because they can be reproduced endlessly. On the other hand, we can see a reproducible artifact as a infinitely valuable resource, given its abundance: even if we were to reproduce it a number of times equal to the number of people on earth, we would not harm\footnote{directly, at least} the original copy nor the original owner of the artifact, because he still will have his own copy intact. Another case could be the value held by items that are not scarce, but are \textit{difficult to access}: it is the case of special recipes in the food industry or proprietary algorithms in the CS field, for example. They can be easily reproduced and replicated but the \textit{procedure needed to get to know them} is very long, heavy and expensive in some cases; this gives them an incredible value. Again, reproducibility poses a problem in this case: once reached, if some of these items are reproducible, then it is very easy to redistribute it and nullify the access barriers to it; this mechanism is often used \textit{the other way around}: companies and institutions put barriers in front of resources to justify a certain high value of them.\\
+			Again, I use the real world equivalent example: if I take my sister's bike to use it, I am directly harming her. It is easy to see that she cannot move as fast as with a bike, and she eventually will buy another bike in order to move efficently in the city. The value of the first bike was \textit{forcibly removed from her}, and so she has lost it while I gained it. This would be different if I could make an exact replica of my sister's bike, out of thin air: then we \textit{both} would be able to cycle through the city and move faster and more efficently, and the original value hold by my sister would be the same, while mine would be increased by that bike. What is impossible with a physical object is possible with a digital artifact: instead of a bike, think about a digital document as a book, a program or an album of photos. I can make an exact copy of it and give it to my sister. Now, we both can access the document, each one of us can access an unaltered copy of it, each one of us can read and make ours the knowledge inside it.\\
+			The last distinction I have to point out is the difference between \textit{instrinsic} and \textit{instrumental} value of something: an item (or action or property) is intrinsecally valuable when it is an end itself, opposed as when it is a means to an end, in which case has instrumental value\cite{valuetheory}. This distinction will be crucial in understanding the problem exposed in this essay.
+
+	\section{Software documentation reproducibility}
+		So far I have introduced software documentation in order to explain what is the main subject of this paper, and I have talked about a property of all digital artifacts: reproducibility. Being a digital artifact itself, software documentation has this property; how this property is managed in the industry and education will be the main problem discussed in the rest of the paper.\\
+		I will analyze how documentation reproducibility is handled in two cases: the former (that I will call \textit{classical} approach in this paper) is the traditional method of exchanging knowledge between people, while the latter (called \textit{web} approach) is the one that has been emerging for some years now in the software development world, and I think it proposes another interesting point of view on the subject.\\
+		Before delving into the two approaches, I need to make a clarification: I am talking about \textit{documentation} and not the \textit{entirety of the software}: even if I borrow a lot of ideas from the Stallman's essay "Why software should be free"\cite{stallman} the field in which I apply them is slightly different; moreover, I do not share the whole Stallman's vision on the software industry.
+
+		\subsection{Classical approach}
+			What I call classical approach to documentation in this article aims to describe the method with which knowledge about software (specifically documentation) is passed through in universities, companies and institutions. In these contexts documentation is locked behind amount of money:
+			\begin{itemize}
+				\item universities distribute knowledge through documentation by selling it to students;
+				\item companies and institutions keep their documentaion secret to everyone, except their employees, so people under contract.
+			\end{itemize}
+			The knowledge is usually very well organized, the manuals are rich of details and the guides are well written and exhaustive. Moreover, usually big companies adopt strict rules for the internal code documentation, enforcing policies on developers to push them to write organized and complete documents, from code comments to manuals passing through design documents, enriched with diagrams and other representation tools to help non technical people to understand the software.\\
+			Specifically in universities, manuals and books are sold for even hundreds of euros in order to explain an approach to programming (books explaining how functional programming works instead of object oriented are an example), a specific subdomain of the development world (as books on parallel systems, or distributed ones), or even specific languages in specific frameworks, in certain cases.\\
+			The classic approach ensures that all this knowledge is, again, well organized and taught in a very clear way; however, in order to pay for the effort that went in writing such a knowledge base, this type of documentation must be kept absolutely secret to whoever is not willing to pay for it. This approach tries to limit reproducibility: the value of the document (and most of the cases, also its \textit{price}) comes from the limited number of copies available, or the significant accessibility barriers to it, as explained in \ref{RaV}. 
+
+		\subsection{Web approach}
+			With "web" approach I address the method of sharing knowledge typical of the open source web projects, as the most popular web developing frameworks\footnote{Such as VueJS, ReactJS or AngularJS}. I avoided the term "open source" documentation on purpose, to not mislead to reader into thinking the problems I want to refer to are related only to the authoring of documentation (\ref{RaV}).\\
+			When adopting this method, documentation is always, from the beginning of the development process to the end, fully	available to the public. The idea behind such a full disclosure of information (that encompasses APIs, manuals, comments, guides, walkthrough, examples etc) is that the more documentation is available to the end user, the easier the first steps in learning and using a technology will be, thus leading to some significative gains for the developers and designers of such piece of technology:
+			\begin{itemize}
+				\item faster adoption: a "simple" (or perceived so) technology will be preferred against the ones that lack or have less available documentation;
+				\item deeper comprehension of the technology;
+				\item richer feedback: if the documentation covers enough topics and branches, and the user is willing to study it deeply, the feedbacks on possible problems in it or improvements/extensions to be added would be very well thought out;
+				\item community involvement: especially for open source projects, the documentation plays a huge role in attracting people to work on it;
+			\end{itemize}
+			This kind of approach can be used with all styles and paradigms of software development, from full proprietary software (with even zero disclosure on vulnerabilities) to open source projects, where it is actually more diffused. The reason is that if you are ready to open source your project, chances are you want to distribute freely also the documentation of it.\\
+			This approach to the documentation does not provide guarantees on the quality of the documents, and often the tools documented in this way have big issues with the guides and APIs\footnote{a good example could be all the poorly documented libraries available for typescript: being in most of the cases just a simple extension of their equivalent in javascript, developers simply \textit{refer to the original documentation}, forgetting the completely different approaches between the two languages.}; this is not true when an open project is backed by a big company or institution.\\
+			Web documentation exploits fully the reproducibility property of digital documents, allowing everyone to access the knowledge needed to use a certain tool.
+
+		\subsection{Comparison of approaches and analysis}
+			The classic and the web approaches to software documentation are completely different in theory, but this does not mean that they are used in very different projects: the classic approach is still utilized in some of the "academic" computer science fields where all the code is available for free, as for example formal model checking or compiler theory; the web approach instead is more often seen used in the big companies world, where tech giants exploit the community-creating power of it to develop their tools at best.\\
+			I think that the main difference between the two approaches is the interpretation of \textit{the value of documentation}; they are also very different under a \textit{pure utilitarian} and under a \textit{deontological} points of view. From whichever perspective though, the classic approach only results to be damaging to the documentation itself, to the software, to the developers community whole.
+
+			\paragraph{Documentation value}
+				The first aspect that differentiates the two approaches is the way the documentation value is perceived: while the web approach sees the documentation as an essential \textit{accessory} to the software, having no value on its own, the classic approach interprets the documentation as a \textit{standalone entity} that holds value. The difference is quite stark: the web approach gives documentation instrumental value, while the classical approach gives it intrinsic value. While the former sees the documentation as a \textit{means} to achieve an end (the end being developing well) the latter instead perceives it as an \textit{end} by itself, so a completely unrelated entity with regards to the development process.\\
+				As an example, we can consider the role of a wrench in the process of building a car: we can easily see how the wrench \textit{alone}, without the car to be built, holds only the value that comes from the materials it has been built with. This is because it was designed specifically as a tool to help people in a specific process, and without such process it is just a mixture of metals and plastic. But when the process is software development, and the tool we are considering is a \textit{reproducible} one, then we cannot even consider the materials that went into the construction of it! Documentation is the perfect example for a pure \textit{mean to an end}.
+
+			\paragraph{Utilitarian interpretation}
+				The utilitarian principle "[...] approves or disapproves of every action whatsoever according to the tendency of [such action] [...] to augment or diminish the happiness of the party [involved][...]"\cite{utilityprinciple}, so from an utilitarian point of view every action should be taken (or not taken) measuring only the amount of people that benefit from it, so the \textit{overall quantity of happiness} produced by such action. Bentham argues that being humanity driven only by pain and happiness, all actions should be taken in order to tend towards the happiness; but he does not limit to individual actions, but extends to "every measure of government"\cite{utilityprinciple}.\\
+				It is quite simple to see, how this apply to the documentation issue: the "happiness" to be looked for in this context is the developing of a tool that helps people in their activity, and the choices we can make are the two approaches to the documentation; the one that \textit{quantitatively} generates more happiness (simply by granting access to knowledge to more people) is the Web approach.\\
+				Even in a non-quantitative approach as the Mill's qualitative approach\cite{millutilitarianism}, where the philosopher argues that pleasures cannot be measured in a quantitative manner but must be analyzed also from a qualitative point of view\footnote{so preferring intellectual pleasures as friendship, art, reading and conversation, for example}, the situation does not change: the web approach generates \textit{more} happiness by allowing more people to access that knowledge base and generates \textit{better} happiness because it generates education and knowledge itself; on the other hand, the classical approach generates happiness only in form of (generally) economic values for the institutions or individuals who own (or have rights on) the documentation. 
+
+			\paragraph{Deontological interpretation}
+				The categorical imperative in its first formulation "Act only according to the maxim whereby you can, at the same time, will that it should become a universal rule"\cite{categoricalimperative} gives us another interesting standpoint from which we can compare the two approaches. A person who wants to embrace the classical approach to documentation (for the formulation of the imperative) will want everyone to follow his/her example, not to distribute the documents alongside the software they are developing. This means that no programmer shares the knowledge about his/her work (at least, not freely) and if it happens that s/he distributes freely his/her work, this would be very difficult to utilize and integrate and \textit{put to a good use}. It is easy, I suppose, to picture what this will lead to: no programmer will be capable of accessing other developers work, and so they would have to "reinvent the wheel" every time, significatively slowing down whichever project they are working on or process they are part of. The whole software development world would have an additional entry barrier, represented by the cost of accessing the knowledge needed to use all the tools necessary for the work. Open source software would make no sense: what would be the point of distributing freely a software that nobody can use, because they have to purchase several manuals to do so?
+	
+	\section{Conclusions}
+		Documentation is the corner stone of software development, but such as every digital artifact it is difficult to regulate its reproducibility and intangibility. There are two main approaches to this issue, but only one of them actually exploits the reproducibility property in order to generate additional value for the people working with that tool, while the other tries to block such property in order to align a digital artifact to its physical equivalents, damaging it and not making use of the full potential it offers, just to generate economic value.\\
+		The software development world as a whole, and in particular the people in charge of teaching and sharing knowledge about programming and designing software, should put more emphasis on the need for accessible, free and good documentation, because it is the only tool available to make a technology usable, useful, and last but not least enjoyable.
+	
+	\clearpage
+	\printbibliography
+\end{document}
+
+
+
+
+
+
+
+
+
+
